@@ -11,6 +11,8 @@ import kotlin.random.Random
 object MineModel {
     private const val MINED = -99
 
+    var state: GameState = GameState.Review
+
     var row: Int = 10
     var column: Int = 6
     var mines: Int = 10
@@ -55,6 +57,7 @@ object MineModel {
             }
             stateMap.put(index, BlockState.None)
         }
+        state = GameState.Start
         loading = true
     }
 
@@ -90,8 +93,10 @@ object MineModel {
     private fun isClosed(index: Int): Boolean = stateMap[index] == BlockState.None
 
     fun markAsMine(row: Int, column: Int): GameState {
+        if (state == GameState.Review) return GameState.Review
         changeState(row, column, BlockState.Marked)
-        return if (verifyMineClear()) GameState.Cleared else GameState.Running
+        state = if (verifyMineClear()) GameState.Cleared else GameState.Running
+        return state
     }
 
     /**
@@ -108,17 +113,21 @@ object MineModel {
     }
 
     fun stepOn(row: Int, column: Int): GameState {
-        if (isMine(row, column)) {
+        //if (state == GameState.Review) return GameState.Review
+        state = if (isMine(row, column)) {
+            stateMap.forEach { key, _ ->
+                if (isMine(key)) stateMap.put(key, BlockState.Hidden)
+            }
             changeState(row, column, BlockState.Mined)
-            //Log.e(TAG, "gg!")
-            return GameState.Exploded
+            GameState.Exploded
         } else {
             changeState(row, column, BlockState.Text)
             if (mineMap[toIndex(row, column)] == 0) {//auto click
                 autoClick0(toIndex(row, column))
             }
+            if (verifyMineClear()) GameState.Cleared else GameState.Running
         }
-        return if (verifyMineClear()) GameState.Cleared else GameState.Running
+        return state
     }
 
     private fun stepOn0(index: Int) {
@@ -135,10 +144,13 @@ object MineModel {
     }
 
     enum class GameState {
-        Start, Running, Exploded, Cleared
+        Start, Running, Exploded, Cleared, Review
     }
 
+    val running: Boolean
+        get() = state == GameState.Running || state == GameState.Start
+
     enum class BlockState {
-        None, Mined, Text, Marked
+        None, Mined, Text, Marked, Hidden
     }
 }

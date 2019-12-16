@@ -5,7 +5,6 @@ import android.os.Handler
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
-import androidx.compose.state
 import androidx.compose.unaryPlus
 import androidx.ui.core.Alignment
 import androidx.ui.core.Text
@@ -14,10 +13,17 @@ import androidx.ui.core.gesture.LongPressGestureDetector
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Clickable
 import androidx.ui.foundation.DrawImage
+import androidx.ui.foundation.shape.border.Border
+import androidx.ui.graphics.Color
+import androidx.ui.graphics.SolidColor
 import androidx.ui.layout.*
-import androidx.ui.material.*
+import androidx.ui.material.Button
+import androidx.ui.material.CircularProgressIndicator
+import androidx.ui.material.MaterialTheme
 import androidx.ui.material.ripple.Ripple
+import androidx.ui.material.surface.Surface
 import androidx.ui.res.imageResource
+import androidx.ui.text.TextStyle
 import androidx.ui.tooling.preview.Preview
 
 private const val TAG = "mine"
@@ -37,37 +43,18 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun MainUi() {
-    val gameState = +state { MineModel.GameState.Start }
-    val dialog = +state { false }
-    if (dialog.value) {
-        AlertDialog(onCloseRequest = {}, confirmButton = {
-            Button(text = "restart", onClick = {
-                MineModel.generateMineMap()
-                gameState.value = MineModel.GameState.Start //reset game state
-                dialog.value = false
-            })
-        }, dismissButton = {
-            Button(text = "okay", style = TextButtonStyle(), onClick = {
-                gameState.value = MineModel.GameState.Start //reset game state
-                dialog.value = false
-            })
-        }, text = {
-            Text(if (gameState.value == MineModel.GameState.Cleared) "PASS" else "GG")
-        })
-    }
-
     if (MineModel.loading) {
         Column(crossAxisAlignment = CrossAxisAlignment.Center) {
             HeightSpacer(height = 32.dp)
-            MineField(onStateChanged = {
-                gameState.value = it
-                dialog.value = true
-            })
+            Ripple(bounded = true) {
+                Clickable(onClick = {
+                    MineModel.generateMineMap()
+                }) {
+                    SmileyIcon(MineModel.state)
+                }
+            }
             HeightSpacer(height = 32.dp)
-            Button(text = "restart", onClick = {
-                Log.d(TAG, "restart?")
-                dialog.value = true
-            })
+            MineField()
         }
     } else {
         Center {
@@ -77,14 +64,38 @@ fun MainUi() {
 }
 
 @Composable
-fun MineField(row: Int = MineModel.row, column: Int = MineModel.column,
-              onStateChanged: (state: MineModel.GameState) -> Unit) {
+fun SmileyIcon(state: MineModel.GameState) {
+    ConstrainedBox(constraints = DpConstraints.tightConstraints(height = 64.dp,
+            width = 64.dp)) {
+        DrawImage(image = +imageResource(when (state) {
+            MineModel.GameState.Exploded, MineModel.GameState.Review -> R.drawable.face_cry
+            MineModel.GameState.Cleared -> R.drawable.face_win
+            else -> R.drawable.face_smile
+        }))
+    }
+}
+
+@Preview
+@Composable
+fun SmileyIconPreview() {
+    MaterialTheme {
+        Row {
+            SmileyIcon(state = MineModel.GameState.Start)
+            SmileyIcon(state = MineModel.GameState.Exploded)
+            SmileyIcon(state = MineModel.GameState.Review)
+            SmileyIcon(state = MineModel.GameState.Cleared)
+        }
+    }
+}
+
+@Composable
+fun MineField(row: Int = MineModel.row, column: Int = MineModel.column) {
     Table(columns = column, columnWidth = { TableColumnWidth.Fixed(BLOCK_SIZE.dp) },
             alignment = { Alignment.Center }) {
         repeat(row) { row ->
             tableRow {
                 repeat(column) { column ->
-                    BlockButton(row = row, column = column, onStateChanged = onStateChanged)
+                    BlockButton(row = row, column = column)
                 }
             }
         }
@@ -94,45 +105,45 @@ fun MineField(row: Int = MineModel.row, column: Int = MineModel.column,
 @Preview
 @Composable
 fun DefaultPreview() {
-    MaterialTheme { MineField(row = 5, column = 5, onStateChanged = {}) }
+    MaterialTheme { MineField(row = 5, column = 5) }
 }
 
 @Composable
-fun BlockButton(row: Int = 0, column: Int = 0,
-                onStateChanged: (state: MineModel.GameState) -> Unit) {
-    val constraints = DpConstraints.tightConstraints(height = BLOCK_SIZE.dp, width = BLOCK_SIZE.dp)
-
-    fun checkGameState(state: MineModel.GameState) {
-        when (state) {
-            MineModel.GameState.Cleared, MineModel.GameState.Exploded -> onStateChanged(state)
-            else -> {
-                // do nothing
-            }
-        }
-    }
-
+fun BlockButton(row: Int = 0, column: Int = 0) {
     when (MineModel.stateMap[MineModel.toIndex(row, column)]) {
         MineModel.BlockState.Marked ->
             MarkedBlock(row, column)
         MineModel.BlockState.Mined ->
-            MineBlock()
+            MineBlock(clicked = true)
+        MineModel.BlockState.Hidden ->
+            MineBlock(clicked = false)
         MineModel.BlockState.Text ->
             TextBlock(row, column)
         else ->
             Ripple(bounded = true) {
                 LongPressGestureDetector(onLongPress = {
-                    if (MineModel.markedMines <= MineModel.mines) {
-                        checkGameState(MineModel.markAsMine(row, column))
+                    if (MineModel.running) {
+                        if (MineModel.markedMines <= MineModel.mines) {
+                            MineModel.markAsMine(row, column)
+                        } else {
+                            Log.e(TAG, "too many mines!!!")
+                        }
                     } else {
-                        Log.e(TAG, "too many mines!!!")
+                        Log.w(TAG, "current game state: ${MineModel.state}")
                     }
                 }) {
                     Clickable(onClick = {
-                        checkGameState(MineModel.stepOn(row, column))
+                        if (MineModel.running) {
+                            MineModel.stepOn(row, column)
+                        } else {
+                            Log.w(TAG, "current game state: ${MineModel.state}")
+                        }
                     }) {
-                        ConstrainedBox(constraints = constraints) {
+                        ConstrainedBox(
+                                constraints = DpConstraints.tightConstraints(height = BLOCK_SIZE.dp,
+                                        width = BLOCK_SIZE.dp)) {
                             DrawImage(image = +imageResource(R.drawable.box))
-                            TextBlock(row, column)
+                            TextBlock(row, column, debug = BuildConfig.DEBUG)
                         }
                     }
                 }
@@ -144,7 +155,11 @@ fun BlockButton(row: Int = 0, column: Int = 0,
 fun MarkedBlock(row: Int, column: Int) {
     Ripple(bounded = true) {
         LongPressGestureDetector(onLongPress = {
-            MineModel.changeState(row, column, MineModel.BlockState.None)
+            if (MineModel.running) {
+                MineModel.changeState(row, column, MineModel.BlockState.None)
+            } else {
+                Log.w(TAG, "not running")
+            }
         }) {
             ConstrainedBox(constraints = DpConstraints.tightConstraints(height = BLOCK_SIZE.dp,
                     width = BLOCK_SIZE.dp)) {
@@ -155,19 +170,28 @@ fun MarkedBlock(row: Int, column: Int) {
 }
 
 @Composable
-fun MineBlock() {
+fun MineBlock(clicked: Boolean = false) {
     ConstrainedBox(constraints = DpConstraints.tightConstraints(height = BLOCK_SIZE.dp,
             width = BLOCK_SIZE.dp)) {
-        DrawImage(image = +imageResource(R.drawable.mine_clicked))
+        DrawImage(image = +imageResource(
+                if (clicked) R.drawable.mine_clicked else R.drawable.mine_noclick))
     }
 }
 
 @Composable
-fun TextBlock(row: Int, column: Int) {
-    ConstrainedBox(constraints = DpConstraints.tightConstraints(height = BLOCK_SIZE.dp,
-            width = BLOCK_SIZE.dp)) {
-        Center {
-            Text(text = "${MineModel.mineMap[MineModel.toIndex(row, column)]}")
+fun TextBlock(row: Int, column: Int, debug: Boolean = false) {
+    val color = if (debug) Color.Transparent else Color.LightGray
+    val borderColor = if (debug) Color.Transparent else Color.Gray
+    Surface(border = Border(borderColor, 1.dp), color = color) {
+        ConstrainedBox(constraints = DpConstraints.tightConstraints(height = BLOCK_SIZE.dp,
+                width = BLOCK_SIZE.dp)) {
+            Center {
+                Text(text = "${MineModel.mineMap[MineModel.toIndex(row, column)]}",
+                        style = TextStyle(color = when {
+                            debug -> Color.Gray
+                            else -> Color.Black
+                        }))
+            }
         }
     }
 }
@@ -178,8 +202,10 @@ fun PreviewBlocks() {
     MaterialTheme {
         Row {
             MarkedBlock(row = 0, column = 0)
-            MineBlock()
+            MineBlock(clicked = false)
+            MineBlock(clicked = true)
             TextBlock(row = 0, column = 0)
+            TextBlock(row = 0, column = 0, debug = true)
         }
     }
 }
