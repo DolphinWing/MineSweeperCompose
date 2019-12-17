@@ -16,7 +16,7 @@ object MineModel {
     var state: GameState = GameState.Review
     var clock: Long = 0
 
-    var row: Int = 5
+    var row: Int = 10
     var column: Int = 6
     var mines: Int = 10
     private var mapSize = this.row * this.column
@@ -37,7 +37,7 @@ object MineModel {
     }
 
     fun generateMineMap() {
-        loading = false
+        loading = true
         mineMap.clear()
         mapSize = row * column
         markedMines = 0 //reset counter
@@ -73,7 +73,7 @@ object MineModel {
             blockMap.put(index, BlockState.None)
         }
         state = GameState.Start
-        loading = true
+        loading = false
     }
 
     fun toIndex(row: Int, column: Int) = row * this.column + column
