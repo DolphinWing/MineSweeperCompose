@@ -6,9 +6,11 @@ import android.os.Message
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.WeakReference
+import androidx.compose.state
+import androidx.compose.unaryPlus
 import androidx.ui.core.setContent
 
-private const val TAG = "MainActivity"
+private const val TAG = "MineActivity"
 
 class MainActivity : AppCompatActivity() {
     private lateinit var handler: MyHandler
@@ -17,16 +19,13 @@ class MainActivity : AppCompatActivity() {
 
         handler = MyHandler(this)
 
-        val displayMetrics = resources.displayMetrics
-        val height: Float = displayMetrics.heightPixels / displayMetrics.density
-        val width: Float = displayMetrics.widthPixels / displayMetrics.density
-        Log.d(TAG, String.format("screen = %f x %f", width, height))
+        val maxSize = MineUi.calculateScreenSize(resources.displayMetrics)
 
         setContent {
             ContentViewWidget(onNewGameCreate = {
                 handler.removeMessages(0) //remove old clock
                 handler.sendEmptyMessageDelayed(0, 1000)
-            })
+            }, maxRows = maxSize.first, maxCols = maxSize.second)
         }
 
         /* delay everything start */

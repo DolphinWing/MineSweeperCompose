@@ -1,5 +1,6 @@
 package dolphin.android.apps.minesweeper
 
+import android.util.DisplayMetrics
 import android.util.Log
 import androidx.compose.Composable
 import androidx.compose.memo
@@ -13,10 +14,8 @@ import androidx.ui.core.sp
 import androidx.ui.foundation.Clickable
 import androidx.ui.foundation.DrawImage
 import androidx.ui.foundation.shape.border.Border
-import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
-import androidx.ui.graphics.SolidColor
 import androidx.ui.layout.*
 import androidx.ui.material.*
 import androidx.ui.material.ripple.Ripple
@@ -29,62 +28,68 @@ import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 
 private const val TAG = "MineUi"
-private const val BLOCK_SIZE = 48
 
-@Preview
-@Composable
-fun DefaultPreview() {
-    MaterialTheme(
-            colors = ColorPalette(
-                    primary = +colorResource(R.color.colorPrimary),
-                    primaryVariant = +colorResource(R.color.colorPrimaryDark),
-                    secondary = +colorResource(R.color.colorAccent)
-            )
-    ) {
-        FlexColumn(crossAxisAlignment = CrossAxisAlignment.Center) {
-            inflexible { HeaderWidget(onNewGameCreate = {}) }
-            expanded(1f) {
-                Stack {
-                    expanded {
-                        Container(expanded = true, alignment = Alignment.TopCenter,
-                                padding = EdgeInsets(left = 8.dp, right = 8.dp, bottom = 24.dp)) {
-                            MineField(row = 8, column = 5)
-                        }
-                    }
-                    positioned(bottomInset = 8.dp, rightInset = 8.dp) {
-                        ConfigPane()
-                    }
-                }
-            }
+class MineUi {
+    companion object {
+        private const val BLOCK_SIZE = 48
+
+        val blockConstraint = DpConstraints.tightConstraints(BLOCK_SIZE.dp, BLOCK_SIZE.dp)
+        val columnConstraint = TableColumnWidth.Fixed(BLOCK_SIZE.dp)
+
+        fun calculateScreenSize(displayMetrics: DisplayMetrics): Pair<Int, Int> {
+            val height: Float = displayMetrics.heightPixels / displayMetrics.density
+            val width: Float = displayMetrics.widthPixels / displayMetrics.density
+            val r = kotlin.math.floor((height - 220) / BLOCK_SIZE).toInt()
+            val c = kotlin.math.floor((width - 24) / BLOCK_SIZE).toInt()
+            Log.d(TAG, "screen: $width x $height ==> rows = $r, columns = $c")
+            return Pair(r, c)
         }
     }
 }
 
+@Preview
 @Composable
-fun ContentViewWidget(onNewGameCreate: (() -> Unit)? = null) {
+private fun DefaultPreview() {
+    ContentViewWidget(
+        maxCols = 10, maxRows = 10, maxMines = 20, row = 6, column = 5, mines = 15,
+        showConfig = true
+    )
+}
+
+@Composable
+fun ContentViewWidget(
+    maxRows: Int = 12, maxCols: Int = 8, maxMines: Int = 40, showConfig: Boolean = false,
+    row: Int = MineModel.row, column: Int = MineModel.column, mines: Int = MineModel.mines,
+    onNewGameCreate: (() -> Unit)? = null
+) {
     MaterialTheme(
-            colors = ColorPalette(
-                    primary = +colorResource(R.color.colorPrimary),
-                    primaryVariant = +colorResource(R.color.colorPrimaryDark),
-                    secondary = +colorResource(R.color.colorAccent)
-            )
+        colors = ColorPalette(
+            primary = +colorResource(R.color.colorPrimary),
+            primaryVariant = +colorResource(R.color.colorPrimaryDark),
+            secondary = +colorResource(R.color.colorAccent)
+        )
     ) {
         FlexColumn(crossAxisAlignment = CrossAxisAlignment.Center) {
             inflexible { HeaderWidget(onNewGameCreate = onNewGameCreate) }
             expanded(1f) {
                 Stack {
                     expanded {
-                        Container(expanded = true, alignment = Alignment.TopCenter,
-                                padding = EdgeInsets(left = 8.dp, right = 8.dp, bottom = 24.dp)) {
+                        Container(
+                            expanded = true, alignment = Alignment.TopCenter,
+                            padding = EdgeInsets(left = 8.dp, right = 8.dp, bottom = 24.dp)
+                        ) {
                             if (MineModel.loading) {
                                 CircularProgressIndicator()
                             } else {
-                                MineField(row = MineModel.row, column = MineModel.column)
+                                MineField(row = row, column = column)
                             }
                         }
                     }
                     positioned(bottomInset = 0.dp, rightInset = 0.dp) {
-                        ConfigPane()
+                        ConfigPane(
+                            maxRows = maxRows, maxCols = maxCols, maxMines = maxMines,
+                            row = row, column = column, mine = mines, showConfig = showConfig
+                        )
                     }
                 }
             }
@@ -93,7 +98,7 @@ fun ContentViewWidget(onNewGameCreate: (() -> Unit)? = null) {
 }
 
 @Composable
-fun HeaderWidget(onNewGameCreate: (() -> Unit)? = null) {
+private fun HeaderWidget(onNewGameCreate: (() -> Unit)? = null) {
     Padding(padding = 32.dp) {
         FlexRow(crossAxisAlignment = CrossAxisAlignment.Center) {
             expanded(1f) {
@@ -121,61 +126,56 @@ fun HeaderWidget(onNewGameCreate: (() -> Unit)? = null) {
 }
 
 @Composable
-fun MineCountWidget() {
+private fun MineCountWidget() {
     ConstrainedBox(constraints = DpConstraints.tightConstraintsForWidth(120.dp)) {
         Text(
-                String.format("%03d", MineModel.mines - MineModel.markedMines),
-                style = TextStyle(
-                        color = Color.Red,
-                        fontSize = 24.sp,
-                        fontFamily = FontFamily.Monospace
-                )
+            String.format("%03d", MineModel.mines - MineModel.markedMines),
+            style = TextStyle(
+                color = Color.Red,
+                fontSize = 24.sp,
+                fontFamily = FontFamily.Monospace
+            )
         )
     }
 }
 
 @Composable
-fun SmileyIcon(state: MineModel.GameState) {
+private fun SmileyIcon(state: MineModel.GameState) {
     ConstrainedBox(constraints = DpConstraints.tightConstraints(height = 64.dp, width = 64.dp)) {
         DrawImage(
-                image = +imageResource(
-                        when (state) {
-                            MineModel.GameState.Exploded, MineModel.GameState.Review -> R.drawable.face_cry
-                            MineModel.GameState.Cleared -> R.drawable.face_win
-                            else -> R.drawable.face_smile
-                        }
-                )
+            image = +imageResource(
+                when (state) {
+                    MineModel.GameState.Exploded, MineModel.GameState.Review -> R.drawable.face_cry
+                    MineModel.GameState.Cleared -> R.drawable.face_win
+                    else -> R.drawable.face_smile
+                }
+            )
         )
     }
 }
 
 @Composable
-fun ClockWidget() {
+private fun ClockWidget() {
     ConstrainedBox(constraints = DpConstraints.tightConstraintsForWidth(120.dp)) {
         Text(
-                String.format("%05d", MineModel.clock),
-                style = TextStyle(
-                        color = Color.Red,
-                        fontSize = 24.sp,
-                        fontFamily = FontFamily.Monospace
-                )
+            String.format("%05d", MineModel.clock),
+            style = TextStyle(
+                color = Color.Red,
+                fontSize = 24.sp,
+                fontFamily = FontFamily.Monospace
+            )
         )
     }
 }
 
 @Composable
-fun MineField(row: Int, column: Int) {
-    Table(columns = column, columnWidth = { TableColumnWidth.Fixed(BLOCK_SIZE.dp) },
-            alignment = { Alignment.Center }) {
+private fun MineField(row: Int, column: Int) {
+    Table(columns = column, columnWidth = { MineUi.columnConstraint },
+        alignment = { Alignment.Center }) {
         repeat(row) { row ->
             tableRow {
                 repeat(column) { column ->
-                    ConstrainedBox(
-                            constraints = DpConstraints.tightConstraints(
-                                    height = BLOCK_SIZE.dp,
-                                    width = BLOCK_SIZE.dp
-                            )
-                    ) {
+                    ConstrainedBox(constraints = MineUi.blockConstraint) {
                         BlockButton(row = row, column = column)
                     }
                 }
@@ -185,8 +185,8 @@ fun MineField(row: Int, column: Int) {
 }
 
 @Composable
-fun BlockButton(row: Int, column: Int) {
-    when (MineModel.blockMap[MineModel.toIndex(row, column)]) {
+private fun BlockButton(row: Int, column: Int) {
+    when (MineModel.blockState[MineModel.toIndex(row, column)]) {
         MineModel.BlockState.Marked ->
             MarkedBlock(row, column)
         MineModel.BlockState.Mined ->
@@ -215,12 +215,7 @@ fun BlockButton(row: Int, column: Int) {
                             Log.w(TAG, "current game state: ${MineModel.state}")
                         }
                     }) {
-                        ConstrainedBox(
-                                constraints = DpConstraints.tightConstraints(
-                                        height = BLOCK_SIZE.dp,
-                                        width = BLOCK_SIZE.dp
-                                )
-                        ) {
+                        ConstrainedBox(constraints = MineUi.blockConstraint) {
                             DrawImage(image = +imageResource(R.drawable.box))
                             TextBlock(row, column, debug = BuildConfig.DEBUG)
                         }
@@ -231,7 +226,7 @@ fun BlockButton(row: Int, column: Int) {
 }
 
 @Composable
-fun MarkedBlock(row: Int, column: Int) {
+private fun MarkedBlock(row: Int, column: Int) {
     Ripple(bounded = true) {
         LongPressGestureDetector(onLongPress = {
             if (MineModel.running) {
@@ -240,12 +235,7 @@ fun MarkedBlock(row: Int, column: Int) {
                 Log.w(TAG, "not running")
             }
         }) {
-            ConstrainedBox(
-                    constraints = DpConstraints.tightConstraints(
-                            height = BLOCK_SIZE.dp,
-                            width = BLOCK_SIZE.dp
-                    )
-            ) {
+            ConstrainedBox(constraints = MineUi.blockConstraint) {
                 DrawImage(image = +imageResource(R.drawable.mine_marked))
             }
         }
@@ -253,35 +243,22 @@ fun MarkedBlock(row: Int, column: Int) {
 }
 
 @Composable
-fun MineBlock(clicked: Boolean = false) {
+private fun MineBlock(clicked: Boolean = false) {
+    val drawable = if (clicked) R.drawable.mine_clicked else R.drawable.mine_noclick
     Surface(border = Border(Color.White, 1.dp), color = Color.LightGray) {
-        ConstrainedBox(
-                constraints = DpConstraints.tightConstraints(
-                        height = BLOCK_SIZE.dp,
-                        width = BLOCK_SIZE.dp
-                )
-        ) {
-            DrawImage(
-                    image = +imageResource(
-                            if (clicked) R.drawable.mine_clicked else R.drawable.mine_noclick
-                    )
-            )
+        ConstrainedBox(constraints = MineUi.blockConstraint) {
+            DrawImage(image = +imageResource(drawable))
         }
     }
 }
 
 @Composable
-fun TextBlock(row: Int, column: Int, debug: Boolean = false) {
-    val value = MineModel.mineMap[MineModel.toIndex(row, column)]
+private fun TextBlock(row: Int, column: Int, debug: Boolean = false) {
+    val value = MineModel.getMineIndicator(row, column)
     if (debug) {
         //TextBlock(value = value, defaultColor = Color.Gray)
-        ConstrainedBox(
-                constraints = DpConstraints.tightConstraints(
-                        height = BLOCK_SIZE.dp,
-                        width = BLOCK_SIZE.dp
-                )
-        ) {
-            Center { Text("$value", style = TextStyle(color = Color.Gray)) }
+        ConstrainedBox(constraints = MineUi.blockConstraint) {
+            Center { Text("$value", style = TextStyle(color = Color.LightGray)) }
         }
     } else {
         TextBlock(value = value)
@@ -289,107 +266,100 @@ fun TextBlock(row: Int, column: Int, debug: Boolean = false) {
 }
 
 private val textBlockColors = arrayOf(
-        Color.White, Color.Blue, Color.Green.copy(green = .5f),
-        Color.Red, Color.Blue.copy(blue = .4f), Color.Red.copy(red = .4f), Color.Magenta
+    Color.White, Color.Blue, Color.Green.copy(green = .5f),
+    Color.Red, Color.Blue.copy(blue = .4f), Color.Red.copy(red = .4f), Color.Magenta
 )
+
+private fun getTextBlockColor(value: Int) = when {
+    value in 1..6 -> textBlockColors[value]
+    value > 6 -> textBlockColors.last()
+    value < 0 -> textBlockColors.first()
+    else -> Color.Black
+}
 
 @Composable
 private fun TextBlock(value: Int) {
     Surface(border = Border(Color.White, 1.dp), color = Color.LightGray) {
-        ConstrainedBox(
-                constraints = DpConstraints.tightConstraints(
-                        height = BLOCK_SIZE.dp,
-                        width = BLOCK_SIZE.dp
+        Container(constraints = MineUi.blockConstraint, alignment = Alignment.Center) {
+            Text(
+                text = "$value", style = TextStyle(
+                    color = getTextBlockColor(value),
+                    fontWeight = if (value > 0) FontWeight.Bold else FontWeight.Normal
                 )
-        ) {
-            Center {
-                Text(
-                        text = "$value", style = TextStyle(
-                        color = when {
-                            value in 1..6 -> textBlockColors[value]
-                            value > 6 -> textBlockColors.last()
-                            value < 0 -> textBlockColors.first()
-                            else -> Color.Black
-                        }, fontWeight = if (value > 0) FontWeight.Bold else FontWeight.Normal
-                )
-                )
-            }
+            )
         }
     }
 }
 
-//@Preview
+@Preview
 @Composable
-fun PreviewBlocks() {
+private fun PreviewBlocks() {
     MaterialTheme {
         Column {
             Row {
                 MarkedBlock(row = 0, column = 0)
                 MineBlock(clicked = false)
                 MineBlock(clicked = true)
-                TextBlock(row = 0, column = 0, debug = false)
                 TextBlock(row = 0, column = 0, debug = true)
-            }
-            Row {
-                TextBlock(value = 0)
-                TextBlock(value = 1)
-                TextBlock(value = 2)
-                TextBlock(value = 3)
-                TextBlock(value = 4)
-            }
-            Row {
-                TextBlock(value = 5)
-                TextBlock(value = 6)
                 TextBlock(value = 7)
                 TextBlock(value = 8)
                 TextBlock(value = -99)
+            }
+            Row {
+                repeat(7) { TextBlock(value = it) }
             }
         }
     }
 }
 
 @Composable
-fun ConfigPane() {
-    val visible = +state { false }
-    val rows = +state { MineModel.row }
-    val columns = +state { MineModel.column }
-    val mines = +state { MineModel.mines }
+private fun ConfigPane(
+    maxRows: Int = 12, maxCols: Int = 8, maxMines: Int = 40,
+    row: Int = MineModel.row, column: Int = MineModel.column, mine: Int = MineModel.mines,
+    showConfig: Boolean = false
+) {
+    val visible = +state { showConfig }
+    val rows = +state { row }
+    val columns = +state { column }
+    val mines = +state { mine }
 
-    Surface(color = if (visible.value) Color.White else Color.Transparent,
-            elevation = if (visible.value) 8.dp else 0.dp,
-            //border = Border(Color.LightGray, 1.dp),
-            shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp)) {
+    Surface(
+        color = if (visible.value) Color.White else Color.Transparent,
+        elevation = if (visible.value) 8.dp else 0.dp,
+        //border = Border(Color.LightGray, 1.dp),
+        shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp)
+    ) {
         Padding(padding = 16.dp) {
             Column(arrangement = Arrangement.End) {
                 if (visible.value) {
-                    TextSlider(start = 5, end = 12, initial = rows.value, onValueChanged = {
-                        rows.value = it
-                    })
-                    TextSlider(start = 4, end = 8, initial = columns.value, onValueChanged = {
-                        columns.value = it
-                    })
-                    TextSlider(start = 5, end = 40, initial = mines.value, onValueChanged = {
-                        mines.value = it
-                    })
+                    TextSlider(start = 5, end = maxRows, initial = rows.value,
+                        onValueChanged = { rows.value = it })
+                    TextSlider(start = 4, end = maxCols, initial = columns.value,
+                        onValueChanged = { columns.value = it })
+                    TextSlider(start = 5, end = maxMines, initial = mines.value, step = 5,
+                        onValueChanged = { mines.value = it })
                 }
                 FlexRow(mainAxisAlignment = MainAxisAlignment.End) {
                     expanded(1f) { WidthSpacer(width = 16.dp) }
                     inflexible {
                         if (visible.value) {
                             Button(text = "Apply", style = TextButtonStyle(), onClick = {
-                                MineModel.row = rows.value
-                                MineModel.column = columns.value
-                                MineModel.mines = mines.value
-                                MineModel.generateMineMap()
+                                MineModel.generateMineMap(rows.value, columns.value, mines.value)
+                                visible.value = false
                             })
                         }
                     }
                     inflexible { WidthSpacer(width = 16.dp) }
                     inflexible {
                         Button(text = if (visible.value) "Hide" else "Config",
-                                style = TextButtonStyle(), onClick = {
-                            visible.value = visible.value.not()
-                        })
+                            style = TextButtonStyle(), onClick = {
+                                //reset values to current config
+                                rows.value = MineModel.row
+                                columns.value = MineModel.column
+                                mines.value = MineModel.mines
+                                //hide config pane
+                                visible.value = visible.value.not()
+                            })
                     }
                 }
             }
@@ -398,28 +368,32 @@ fun ConfigPane() {
 }
 
 @Composable
-fun TextSlider(start: Int = 0, end: Int = 100, step: Int = 1, initial: Int = 0,
-               onValueChanged: ((value: Int) -> Unit)? = null) {
+private fun TextSlider(
+    start: Int = 0, end: Int = 100, step: Int = 1, initial: Int = 0,
+    onValueChanged: ((value: Int) -> Unit)? = null
+) {
     val position = +memo {
-        SliderPosition(initial = initial.toFloat(), steps = (end - start - 1) / step,
-                valueRange = start.toFloat()..end.toFloat())
+        SliderPosition(
+            initial = initial.toFloat(), steps = (end - start - step) / step,
+            valueRange = start.toFloat()..end.toFloat()
+        )
     }
 
     FlexRow(crossAxisAlignment = CrossAxisAlignment.Center) {
         inflexible {
             Container(width = 36.dp) {
-                Text("$start")
+                Text("$start", style = TextStyle(color = Color.Gray))
             }
         }
         expanded(1f) {
-            Slider(position, onValueChangeEnd = {
+            Slider(position, color = (+MaterialTheme.colors()).secondary, onValueChangeEnd = {
                 Log.d(TAG, "end value: ${position.value}")
                 if (onValueChanged != null) onValueChanged(position.value.toInt())
             })
         }
         inflexible {
             Container(width = 36.dp) {
-                Text("$end")
+                Text("$end", style = TextStyle(color = Color.Gray))
             }
         }
     }
