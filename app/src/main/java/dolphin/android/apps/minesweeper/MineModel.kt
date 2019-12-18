@@ -5,7 +5,6 @@ import android.util.SparseArray
 import android.util.SparseIntArray
 import androidx.compose.Model
 import androidx.core.util.forEach
-import androidx.ui.core.Modifier
 import kotlin.random.Random
 
 @Model
@@ -16,8 +15,8 @@ object MineModel {
     var state: GameState = GameState.Review
     var clock: Long = 0L
 
-    var row: Int = 10
-    var column: Int = 6
+    var row: Int = 6
+    var column: Int = 5
     var mines: Int = 10
     var markedMines: Int = 0
 
