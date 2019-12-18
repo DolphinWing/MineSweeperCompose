@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">踩地雷</string>
+    <string name="action_config">設定</string>
+    <string name="action_apply">套用</string>
+    <string name="action_hide">隱藏</string>
+</resources>
