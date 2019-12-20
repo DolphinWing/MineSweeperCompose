@@ -216,13 +216,18 @@ private fun BlockButton(row: Int, column: Int) {
                             Log.w(TAG, "current game state: ${MineModel.state}")
                         }
                     }) {
-                        ConstrainedBox(constraints = MineUi.blockConstraint) {
-                            DrawImage(image = +imageResource(R.drawable.box))
-                            TextBlock(row, column, debug = BuildConfig.DEBUG)
-                        }
+                        Block(row = row, column = column)
                     }
                 }
             }
+    }
+}
+
+@Composable
+private fun Block(row: Int, column: Int, debug: Boolean = BuildConfig.DEBUG) {
+    ConstrainedBox(constraints = MineUi.blockConstraint) {
+        DrawImage(image = +imageResource(R.drawable.box))
+        if (debug) TextBlock(row, column, debug = debug)
     }
 }
 
@@ -298,16 +303,17 @@ private fun PreviewBlocks() {
     MaterialTheme {
         Column {
             Row {
+                Block(row = 0, column = 0, debug = true)
+                Block(row = 0, column = 0, debug = false)
                 MarkedBlock(row = 0, column = 0)
                 MineBlock(clicked = false)
                 MineBlock(clicked = true)
-                TextBlock(row = 0, column = 0, debug = true)
-                TextBlock(value = 7)
-                TextBlock(value = 8)
-                TextBlock(value = -99)
+                //TextBlock(value = 7)
+                //TextBlock(value = 8)
             }
             Row {
                 repeat(7) { TextBlock(value = it) }
+                TextBlock(value = -99)
             }
         }
     }
