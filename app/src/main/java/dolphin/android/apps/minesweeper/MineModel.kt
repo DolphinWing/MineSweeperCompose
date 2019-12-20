@@ -180,9 +180,13 @@ object MineModel {
     }
 
     private fun autoClick0(index: Int) {
+        if (notFirstRow(index) && notFirstColumn(index)) stepOn0(toNorthWestIndex(index))
         if (notFirstRow(index)) stepOn0(toNorthIndex(index))
-        if (notLastRow(index)) stepOn0(toSouthIndex(index))
+        if (notFirstRow(index) && notLastColumn(index)) stepOn0(toNorthEastIndex(index))
         if (notFirstColumn(index)) stepOn0(toWestIndex(index))
         if (notLastColumn(index)) stepOn0(toEastIndex(index))
+        if (notLastRow(index) && notFirstColumn(index)) stepOn0(toSouthWestIndex(index))
+        if (notLastRow(index)) stepOn0(toSouthIndex(index))
+        if (notLastRow(index) && notLastColumn(index)) stepOn0(toSouthEastIndex(index))
     }
 }

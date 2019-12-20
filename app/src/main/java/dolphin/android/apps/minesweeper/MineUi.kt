@@ -264,7 +264,7 @@ private fun TextBlock(row: Int, column: Int, debug: Boolean = false) {
     if (debug) {
         //TextBlock(value = value, defaultColor = Color.Gray)
         ConstrainedBox(constraints = MineUi.blockConstraint) {
-            Center { Text("$value", style = TextStyle(color = Color.LightGray)) }
+            Center { Text("$value", style = TextStyle(color = Color.Gray)) }
         }
     } else {
         TextBlock(value = value)
