@@ -24,6 +24,7 @@ object MineModel {
     val blockState = SparseArray<BlockState>()
 
     var loading: Boolean = false
+    var firstClick: Boolean = false
 
     enum class GameState {
         Start, Running, Exploded, Cleared, Review
@@ -55,16 +56,29 @@ object MineModel {
         markedMines = 0 //reset counter
         clock = 0 //reset clock
 
-        /* calculate mines position */
-        repeat(this.mines) {
-            var i = Random.nextInt(0, mapSize)
-            while (mineMap[i] == MINED) {
-                i = Random.nextInt(0, mapSize)
-            }
-            mineMap.put(i, MINED)
-        }
+        putMinesIntoField()
+        calculateField()
 
-        /* calculate mine count */
+        state = GameState.Start
+        loading = false
+        firstClick = true
+    }
+
+    private fun putMinesIntoField() {
+        repeat(this.mines) {
+            mineMap.put(randomNewMine(), MINED)
+        }
+    }
+
+    private fun randomNewMine(): Int {
+        var i = Random.nextInt(0, mapSize)
+        while (mineExists(i)) {
+            i = Random.nextInt(0, mapSize)
+        }
+        return i
+    }
+
+    private fun calculateField() {
         repeat(mapSize) { index ->
             if (!mineExists(index)) {//check 8-directions
                 var count = 0
@@ -84,8 +98,6 @@ object MineModel {
             }
             blockState.put(index, BlockState.None)
         }
-        state = GameState.Start
-        loading = false
     }
 
     fun toIndex(row: Int, column: Int) = row * this.column + column
@@ -147,25 +159,43 @@ object MineModel {
         return suspects.none { !mineExists(it) }
     }
 
+    private fun moveMineToAnotherPlace(oldIndex: Int) {
+        mineMap.put(oldIndex, 0) //remove mine
+        var newIndex = randomNewMine()
+        while (newIndex == oldIndex) newIndex = randomNewMine()
+        Log.v(TAG, "move $oldIndex to $newIndex")
+        mineMap.put(newIndex, MINED)
+    }
+
     fun stepOn(row: Int, column: Int): GameState {
         if (state == GameState.Review) return GameState.Review
         state = if (mineExists(row, column)) {
-            //reveal not marked mines
-            blockState.forEach { key, _ ->
-                if (mineExists(key) && blockState[key] != BlockState.Marked) {
-                    blockState.put(key, BlockState.Hidden)
+            if (firstClick) {//recalculate mine map because first click cannot be a mine
+                Log.w(TAG, "recalculate mine map")
+                loading = true
+                moveMineToAnotherPlace(toIndex(row, column)) //move to another place
+                calculateField() //recalculate map
+                loading = false
+                return stepOn(row, column) //step on again, won't be a mine
+            } else {
+                //reveal not marked mines
+                blockState.forEach { key, _ ->
+                    if (mineExists(key) && blockState[key] != BlockState.Marked) {
+                        blockState.put(key, BlockState.Hidden)
+                    }
                 }
+                changeState(row, column, BlockState.Mined)
+                Log.v(TAG, "Game over! you lost!!")
+                GameState.Exploded
             }
-            changeState(row, column, BlockState.Mined)
-            Log.v(TAG, "Game over! you lost!!")
-            GameState.Exploded
-        } else {
+        } else {//not mine, reveal it
             changeState(row, column, BlockState.Text)
             if (mineMap.get(toIndex(row, column)) == 0) {//auto click
                 autoClick0(toIndex(row, column))
             }
             if (verifyMineClear()) GameState.Cleared else GameState.Running
         }
+        firstClick = false //mark that we have click at least one block
         return state
     }
 
