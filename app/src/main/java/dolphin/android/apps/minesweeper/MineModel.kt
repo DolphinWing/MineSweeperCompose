@@ -219,4 +219,13 @@ object MineModel {
         if (notLastRow(index)) stepOn0(toSouthIndex(index))
         if (notLastRow(index) && notLastColumn(index)) stepOn0(toSouthEastIndex(index))
     }
+
+    var funny: Boolean = false /* a funny mode for YA */
+    private var funnyCount = 0
+    fun funnyModeDetector() {
+        if (row == 5 && column == 4 && mines == 5 && ++funnyCount == 10) {
+            Log.w(TAG, "enable YA mode!")
+            funny = true
+        }
+    }
 }

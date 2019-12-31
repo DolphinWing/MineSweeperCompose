@@ -6,8 +6,6 @@ import android.os.Message
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.WeakReference
-import androidx.compose.state
-import androidx.compose.unaryPlus
 import androidx.ui.core.setContent
 
 private const val TAG = "MineActivity"
@@ -30,6 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         /* delay everything start */
         Handler().post {
+            MineModel.funny = BuildConfig.DEBUG /* a funny mode for YA */
             MineModel.generateMineMap()
             handler.sendEmptyMessageDelayed(0, 1000)
         }
