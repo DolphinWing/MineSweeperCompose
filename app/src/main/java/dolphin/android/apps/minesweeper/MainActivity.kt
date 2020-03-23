@@ -5,8 +5,10 @@ import android.os.Handler
 import android.os.Message
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.WeakReference
+import androidx.compose.Composable
 import androidx.ui.core.setContent
+import androidx.ui.tooling.preview.Preview
+import java.lang.ref.WeakReference
 
 private const val TAG = "MineActivity"
 
@@ -20,10 +22,12 @@ class MainActivity : AppCompatActivity() {
         val maxSize = MineUi.calculateScreenSize(resources.displayMetrics)
 
         setContent {
-            ContentViewWidget(onNewGameCreate = {
-                handler.removeMessages(0) //remove old clock
-                handler.sendEmptyMessageDelayed(0, 1000)
-            }, maxRows = maxSize.first, maxCols = maxSize.second)
+            contentViewWidget(
+                    onNewGameCreated = {
+                        handler.removeMessages(0) //remove old clock
+                        handler.sendEmptyMessageDelayed(0, 1000)
+                    },
+                    maxRows = maxSize.first, maxCols = maxSize.second)
         }
 
         /* delay everything start */
@@ -62,4 +66,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+}
+
+@Preview("Default layout")
+@Composable
+private fun defaultPreview() {
+    contentViewWidget(
+        maxCols = 10, maxRows = 10, maxMines = 20, row = 6, column = 5, mines = 15,
+        showConfig = true
+    )
 }

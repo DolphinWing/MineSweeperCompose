@@ -3,4 +3,7 @@
     <string name="action_config">Config</string>
     <string name="action_apply">Apply</string>
     <string name="action_hide">Hide</string>
+    <string name="config_row">Row</string>
+    <string name="config_column">Column</string>
+    <string name="config_mine">Mine</string>
 </resources>

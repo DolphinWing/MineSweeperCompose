@@ -4,4 +4,7 @@
     <string name="action_config">設定</string>
     <string name="action_apply">套用</string>
     <string name="action_hide">隱藏</string>
+    <string name="config_row">列</string>
+    <string name="config_column">欄</string>
+    <string name="config_mine">雷</string>
 </resources>

@@ -1,17 +1,17 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+//apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    buildToolsVersion "29.0.3"
 
     defaultConfig {
         applicationId "dolphin.android.apps.minesweeper"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 5
-        versionName "1.0.3"
+        versionCode 6
+        versionName "1.0.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -32,14 +32,18 @@ android {
     buildFeatures {
         compose true
     }
-
+    composeOptions {
+        kotlinCompilerExtensionVersion "$compose_compiler_extension_version"
+    }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    //implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.core:core-ktx:1.1.0'
+    implementation('androidx.activity:activity-ktx:1.1.0')
+    implementation 'androidx.core:core-ktx:1.2.0'
+
     implementation("androidx.compose:compose-runtime:$compose_version")
     implementation("androidx.ui:ui-framework:$compose_version")
     implementation("androidx.ui:ui-layout:$compose_version")
@@ -47,7 +51,10 @@ dependencies {
     implementation("androidx.ui:ui-foundation:$compose_version")
     implementation("androidx.ui:ui-animation:$compose_version")
     implementation "androidx.ui:ui-tooling:$compose_version"
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    androidTestImplementation("junit:junit:4.13")
+    androidTestImplementation("androidx.test:rules:1.2.0")
+    androidTestImplementation("androidx.test:runner:1.2.0")
+    androidTestImplementation("androidx.ui:ui-platform:$compose_version")
+    androidTestImplementation("androidx.ui:ui-test:$compose_version")
 }
