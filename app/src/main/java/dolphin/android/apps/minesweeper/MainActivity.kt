@@ -2,77 +2,50 @@ package dolphin.android.apps.minesweeper
 
 import android.os.Bundle
 import android.os.Handler
-import android.os.Message
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.Composable
 import androidx.ui.core.setContent
-import androidx.ui.tooling.preview.Preview
-import java.lang.ref.WeakReference
 
 private const val TAG = "MineActivity"
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var handler: MyHandler
+
+    private lateinit var model: MineModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        handler = MyHandler(this)
-
         val maxSize = MineUi.calculateScreenSize(resources.displayMetrics)
+        model = MineModel(maxRows = maxSize.first, maxCols = maxSize.second)
 
         setContent {
-            contentViewWidget(
-                    onNewGameCreated = {
-                        handler.removeMessages(0) //remove old clock
-                        handler.sendEmptyMessageDelayed(0, 1000)
-                    },
-                    maxRows = maxSize.first, maxCols = maxSize.second)
+            MineUi.mainUi(model = model) {
+                Log.d("MineUi", "on new game created: ${model.row}x${model.column}")
+                if (model.funny) toastAboutFunnyModeEnabled()
+            }
         }
 
         /* delay everything start */
         Handler().post {
-            MineModel.funny = BuildConfig.DEBUG /* a funny mode for YA */
-            MineModel.generateMineMap()
-            handler.sendEmptyMessageDelayed(0, 1000)
+            model.funny = BuildConfig.DEBUG /* a funny mode for YA */
+            model.generateMineMap()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeMessages(0)
+        model.state = MineModel.GameState.Destroyed
     }
 
-    private class MyHandler(a: MainActivity) : Handler() {
-        private val activity = WeakReference(a)
+    private var toasted: Boolean = false
 
-        override fun handleMessage(msg: Message) {
-            activity.get()?.handleMessage(msg)
+    private fun toastAboutFunnyModeEnabled() {
+        if (!toasted) {
+            runOnUiThread {
+                Toast.makeText(this, R.string.toast_funny_mode_enabled, Toast.LENGTH_SHORT).show()
+            }
+            toasted = true
         }
     }
-
-    private fun handleMessage(@Suppress("UNUSED_PARAMETER") msg: Message) {
-        when {
-            MineModel.state == MineModel.GameState.Start -> {
-                //Log.d(TAG, "wait user click ${System.currentTimeMillis()}")
-                handler.sendEmptyMessageDelayed(0, 1000)
-            }
-            MineModel.running -> {
-                MineModel.clock++
-                handler.sendEmptyMessageDelayed(0, 1000)
-            }
-            else -> {
-                Log.v(TAG, "clock stopped!")
-            }
-        }
-    }
-}
-
-@Preview("Default layout")
-@Composable
-private fun defaultPreview() {
-    contentViewWidget(
-        maxCols = 10, maxRows = 10, maxMines = 20, row = 6, column = 5, mines = 15,
-        showConfig = true
-    )
 }

@@ -6,4 +6,5 @@
     <string name="config_row">Row</string>
     <string name="config_column">Column</string>
     <string name="config_mine">Mine</string>
+    <string name="toast_funny_mode_enabled">God mode enabled!</string>
 </resources>

@@ -1,5 +1,8 @@
 package dolphin.android.apps.minesweeper
 
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.util.SparseArray
 import android.util.SparseIntArray
@@ -8,26 +11,33 @@ import androidx.core.util.forEach
 import kotlin.random.Random
 
 @Model
-object MineModel {
-    private const val TAG = "MineModel"
-    private const val MINED = -99
+class MineModel(
+    val maxRows: Int, val maxCols: Int,
+    var state: GameState = GameState.Start,
+    var clock: Long = 0L,
+    var row: Int = 6,
+    var column: Int = 5,
+    var mines: Int = 10,
+    var markedMines: Int = 0,
+    var loading: Boolean = false,
+    var funny: Boolean = false /* a funny mode for YA */
+) {
+    companion object {
+        private const val TAG = "MineModel"
+        private const val MINED = -99
+    }
 
-    var state: GameState = GameState.Review
-    var clock: Long = 0L
-
-    var row: Int = 6
-    var column: Int = 5
-    var mines: Int = 10
-    var markedMines: Int = 0
+    val remainingMines: Int
+        get() = mines - markedMines
 
     private val mineMap = SparseIntArray()
-    val blockState = SparseArray<BlockState>()
+    private val blockState = SparseArray<BlockState>()
+    fun getBlockState(row: Int, column: Int): BlockState = blockState[toIndex(row, column)]
 
-    var loading: Boolean = false
-    var firstClick: Boolean = false
+    private var firstClick: Boolean = false
 
     enum class GameState {
-        Start, Running, Exploded, Cleared, Review
+        Start, Running, Exploded, Cleared, Review, Destroyed
     }
 
     /**
@@ -100,7 +110,7 @@ object MineModel {
         }
     }
 
-    fun toIndex(row: Int, column: Int) = row * this.column + column
+    private fun toIndex(row: Int, column: Int) = row * this.column + column
 
     private fun mineExists(index: Int): Boolean = if (index in 0 until mapSize)
         mineMap[index] == MINED else false
@@ -108,6 +118,7 @@ object MineModel {
     private fun mineExists(row: Int, column: Int) = mineExists(toIndex(row, column))
 
     fun getMineIndicator(row: Int, column: Int): Int {
+        //Log.d(TAG, "==> ${toIndex(row, column)} ${mineMap[toIndex(row, column)]}")
         return mineMap[toIndex(row, column)]
     }
 
@@ -167,6 +178,19 @@ object MineModel {
         mineMap.put(newIndex, MINED)
     }
 
+    private val clockHandler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            if (running) {
+                clock++
+                tick()
+            }
+        }
+
+        fun tick() {
+            sendEmptyMessageDelayed(0, 1000)
+        }
+    }
+
     fun stepOn(row: Int, column: Int): GameState {
         if (state == GameState.Review) return GameState.Review
         state = if (mineExists(row, column)) {
@@ -195,7 +219,10 @@ object MineModel {
             }
             if (verifyMineClear()) GameState.Cleared else GameState.Running
         }
-        firstClick = false //mark that we have click at least one block
+        if (firstClick) {
+            clockHandler.tick()
+            firstClick = false //mark that we have click at least one block
+        }
         return state
     }
 
@@ -220,12 +247,13 @@ object MineModel {
         if (notLastRow(index) && notLastColumn(index)) stepOn0(toSouthEastIndex(index))
     }
 
-    var funny: Boolean = false /* a funny mode for YA */
     private var funnyCount = 0
-    fun funnyModeDetector() {
+
+    fun onTheWayToFunnyMode(): Boolean {
         if (row == 5 && column == 4 && mines == 5 && ++funnyCount == 10) {
             Log.w(TAG, "enable YA mode!")
             funny = true
         }
+        return row == 5 && column == 4 && mines == 5
     }
 }
