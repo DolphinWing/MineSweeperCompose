@@ -33,9 +33,8 @@ import androidx.ui.unit.Dp
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
 
-private const val TAG = "MineUi"
-
 object MineUi {
+    private const val TAG = "MineUi"
     private const val BLOCK_SIZE = 48
     private const val SMILEY_SIZE = 64
 
@@ -53,9 +52,9 @@ object MineUi {
 
     @Composable
     private fun imageDrawable(
-        image: Image,
-        width: Dp = BLOCK_SIZE.dp,
-        height: Dp = BLOCK_SIZE.dp
+            image: Image,
+            width: Dp = BLOCK_SIZE.dp,
+            height: Dp = BLOCK_SIZE.dp
     ) {
         val imageModifier = ImagePainter(image).toModifier(scaleFit = ScaleFit.FillMaxDimension)
         Box(LayoutSize(width, height) + imageModifier)
@@ -64,15 +63,15 @@ object MineUi {
     @Composable
     fun mainUi(model: MineModel, onNewGameCreated: (() -> Unit)? = null) {
         contentViewWidget(
-            maxRows = model.maxRows,
-            maxCols = model.maxCols,
-            maxMines = 40,
-            row = model.row,
-            column = model.column,
-            mines = model.mines,
-            loading = model.loading,
-            onNewGameCreated = onNewGameCreated,
-            model = model
+                maxRows = model.maxRows,
+                maxCols = model.maxCols,
+                maxMines = 40,
+                row = model.row,
+                column = model.column,
+                mines = model.mines,
+                loading = model.loading,
+                onNewGameCreated = onNewGameCreated,
+                model = model
         )
     }
 
@@ -80,46 +79,46 @@ object MineUi {
     @Composable
     private fun defaultPreview() {
         contentViewWidget(
-            maxCols = 10,
-            maxRows = 10,
-            maxMines = 20,
-            row = 6,
-            column = 5,
-            mines = 15,
-            showConfig = true,
-            loading = false
+                maxCols = 10,
+                maxRows = 10,
+                maxMines = 20,
+                row = 6,
+                column = 5,
+                mines = 15,
+                showConfig = true,
+                loading = false
         )
     }
 
     @Composable
     private fun contentViewWidget(
-        maxRows: Int = 12,
-        maxCols: Int = 8,
-        maxMines: Int = 40,
-        showConfig: Boolean = false,
-        row: Int = 6,
-        column: Int = 6,
-        mines: Int = 10,
-        loading: Boolean = false,
-        model: MineModel? = null,
-        onNewGameCreated: (() -> Unit)? = null
+            maxRows: Int = 12,
+            maxCols: Int = 8,
+            maxMines: Int = 40,
+            showConfig: Boolean = false,
+            row: Int = 6,
+            column: Int = 6,
+            mines: Int = 10,
+            loading: Boolean = false,
+            model: MineModel? = null,
+            onNewGameCreated: (() -> Unit)? = null
     ) {
         MaterialTheme(
-            colors = lightColorPalette(
-                primary = colorResource(R.color.colorPrimary),
-                primaryVariant = colorResource(R.color.colorPrimaryDark),
-                secondary = colorResource(R.color.colorAccent)
-            )
+                colors = lightColorPalette(
+                        primary = colorResource(R.color.colorPrimary),
+                        primaryVariant = colorResource(R.color.colorPrimaryDark),
+                        secondary = colorResource(R.color.colorAccent)
+                )
         ) {
             Column(arrangement = Arrangement.Center) {
                 headerWidget(model = model, onNewGameCreated = onNewGameCreated)
                 Stack(modifier = LayoutFlexible(1f)) {
                     Box(
-                        LayoutSize.Fill,
-                        paddingLeft = 8.dp,
-                        paddingRight = 8.dp,
-                        paddingBottom = 24.dp,
-                        gravity = ContentGravity.TopCenter
+                            LayoutSize.Fill,
+                            paddingLeft = 8.dp,
+                            paddingRight = 8.dp,
+                            paddingBottom = 24.dp,
+                            gravity = ContentGravity.TopCenter
                     ) {
                         if (loading) {
                             CircularProgressIndicator()
@@ -129,15 +128,15 @@ object MineUi {
                     }
                     Box(LayoutGravity.BottomCenter) {
                         configPane(
-                            model = model,
-                            maxRows = maxRows,
-                            maxCols = maxCols,
-                            maxMines = maxMines,
-                            row = row,
-                            column = column,
-                            mine = mines,
-                            showConfig = showConfig,
-                            onNewGameCreated = onNewGameCreated
+                                model = model,
+                                maxRows = maxRows,
+                                maxCols = maxCols,
+                                maxMines = maxMines,
+                                row = row,
+                                column = column,
+                                mine = mines,
+                                showConfig = showConfig,
+                                onNewGameCreated = onNewGameCreated
                         )
                     }
                 }
@@ -150,8 +149,8 @@ object MineUi {
         Row(LayoutPadding(32.dp)) {
             Box(LayoutFlexible(1f), gravity = ContentGravity.Center) {
                 Container(
-                    height = SMILEY_SIZE.dp,
-                    expanded = true
+                        height = SMILEY_SIZE.dp,
+                        expanded = true
                 ) { mineCountWidget(model = model) }
             }
             Box {
@@ -168,8 +167,8 @@ object MineUi {
             }
             Box(LayoutFlexible(1f), gravity = ContentGravity.Center) {
                 Container(
-                    height = SMILEY_SIZE.dp,
-                    expanded = true
+                        height = SMILEY_SIZE.dp,
+                        expanded = true
                 ) { playClockWidget(model = model) }
             }
         }
@@ -178,16 +177,16 @@ object MineUi {
     @Composable
     private fun mineCountWidget(model: MineModel?) {
         Container(
-            constraints = DpConstraints.fixedWidth(120.dp),
-            padding = EdgeInsets(left = 32.dp, right = 32.dp)
+                constraints = DpConstraints.fixedWidth(120.dp),
+                padding = EdgeInsets(left = 32.dp, right = 32.dp)
         ) {
             Text(
-                String.format("%03d", model?.remainingMines ?: 0),
-                style = TextStyle(
-                    color = Color.Red,
-                    fontSize = 24.sp,
-                    fontFamily = FontFamily.Monospace
-                )
+                    String.format("%03d", model?.remainingMines ?: 0),
+                    style = TextStyle(
+                            color = Color.Red,
+                            fontSize = 24.sp,
+                            fontFamily = FontFamily.Monospace
+                    )
             )
         }
     }
@@ -195,11 +194,11 @@ object MineUi {
     @Composable
     private fun smileyIcon(state: MineModel.GameState) {
         val image = imageResource(
-            when (state) {
-                MineModel.GameState.Exploded, MineModel.GameState.Review -> R.drawable.face_cry
-                MineModel.GameState.Cleared -> R.drawable.face_win
-                else -> R.drawable.face_smile
-            }
+                when (state) {
+                    MineModel.GameState.Exploded, MineModel.GameState.Review -> R.drawable.face_cry
+                    MineModel.GameState.Cleared -> R.drawable.face_win
+                    else -> R.drawable.face_smile
+                }
         )
         imageDrawable(image, SMILEY_SIZE.dp, SMILEY_SIZE.dp)
     }
@@ -207,16 +206,16 @@ object MineUi {
     @Composable
     private fun playClockWidget(model: MineModel?) {
         Container(
-            constraints = DpConstraints.fixedWidth(120.dp),
-            padding = EdgeInsets(left = 16.dp, right = 8.dp)
+                constraints = DpConstraints.fixedWidth(120.dp),
+                padding = EdgeInsets(left = 16.dp, right = 8.dp)
         ) {
             Text(
-                String.format("%05d", model?.clock ?: 0),
-                style = TextStyle(
-                    color = Color.Red,
-                    fontSize = 24.sp,
-                    fontFamily = FontFamily.Monospace
-                )
+                    String.format("%05d", model?.clock ?: 0),
+                    style = TextStyle(
+                            color = Color.Red,
+                            fontSize = 24.sp,
+                            fontFamily = FontFamily.Monospace
+                    )
             )
         }
     }
@@ -224,7 +223,7 @@ object MineUi {
     @Composable
     private fun mineField(model: MineModel?, row: Int, column: Int) {
         Table(columns = column, columnWidth = { columnConstraint },
-            alignment = { Alignment.Center }) {
+                alignment = { Alignment.Center }) {
             repeat(row) { row ->
                 tableRow {
                     repeat(column) { column ->
@@ -269,10 +268,10 @@ object MineUi {
                             }
                         }) {
                             baseBlock(
-                                model = model,
-                                row = row,
-                                column = column,
-                                debug = model?.funny ?: false
+                                    model = model,
+                                    row = row,
+                                    column = column,
+                                    debug = model?.funny ?: false
                             )
                         }
                     }
@@ -282,10 +281,10 @@ object MineUi {
 
     @Composable
     private fun baseBlock(
-        model: MineModel? = null,
-        row: Int,
-        column: Int,
-        debug: Boolean = BuildConfig.DEBUG
+            model: MineModel? = null,
+            row: Int,
+            column: Int,
+            debug: Boolean = BuildConfig.DEBUG
     ) {
         Container(constraints = blockConstraint) {
             Stack {
@@ -327,8 +326,8 @@ object MineUi {
             Container(constraints = blockConstraint) {
                 Center {
                     Text(
-                        if (value < 0) "*" else "$value",
-                        style = TextStyle(color = Color.Gray)
+                            if (value < 0) "*" else "$value",
+                            style = TextStyle(color = Color.Gray)
                     )
                 }
             }
@@ -338,8 +337,8 @@ object MineUi {
     }
 
     private val textBlockColors = arrayOf(
-        Color.White, Color.Blue, Color.Green.copy(green = .5f),
-        Color.Red, Color.Blue.copy(blue = .4f), Color.Red.copy(red = .4f), Color.Magenta
+            Color.White, Color.Blue, Color.Green.copy(green = .5f),
+            Color.Red, Color.Blue.copy(blue = .4f), Color.Red.copy(red = .4f), Color.Magenta
     )
 
     private fun getTextBlockColor(value: Int) = when {
@@ -354,11 +353,11 @@ object MineUi {
         Surface(border = Border(1.dp, color = Color.White), color = Color.LightGray) {
             Container(constraints = blockConstraint, alignment = Alignment.Center) {
                 Text(
-                    text = "$value",
-                    style = TextStyle(
-                        color = getTextBlockColor(value),
-                        fontWeight = if (value > 0) FontWeight.Bold else FontWeight.Normal
-                    )
+                        text = "$value",
+                        style = TextStyle(
+                                color = getTextBlockColor(value),
+                                fontWeight = if (value > 0) FontWeight.Bold else FontWeight.Normal
+                        )
                 )
             }
         }
@@ -388,15 +387,15 @@ object MineUi {
 
     @Composable
     private fun configPane(
-        model: MineModel?,
-        maxRows: Int = 12,
-        maxCols: Int = 8,
-        maxMines: Int = 40,
-        row: Int = 6,
-        column: Int = 5,
-        mine: Int = 10,
-        showConfig: Boolean = false,
-        onNewGameCreated: (() -> Unit)? = null
+            model: MineModel?,
+            maxRows: Int = 12,
+            maxCols: Int = 8,
+            maxMines: Int = 40,
+            row: Int = 6,
+            column: Int = 5,
+            mine: Int = 10,
+            showConfig: Boolean = false,
+            onNewGameCreated: (() -> Unit)? = null
     ) {
         val visible = state { showConfig }
         val rows = state { row }
@@ -404,7 +403,7 @@ object MineUi {
         val mines = state { mine }
 
         val buttonText = stringResource(
-            if (visible.value) R.string.action_hide else R.string.action_config
+                if (visible.value) R.string.action_hide else R.string.action_config
         )
 
         fun applyNewConfig() {
@@ -422,33 +421,33 @@ object MineUi {
         }
 
         Surface(
-            color = if (visible.value) Color.White else Color.Transparent,
-            elevation = if (visible.value) 8.dp else 0.dp,
-            //border = Border(Color.LightGray, 1.dp),
-            shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp)
+                color = if (visible.value) Color.White else Color.Transparent,
+                elevation = if (visible.value) 8.dp else 0.dp,
+                //border = Border(Color.LightGray, 1.dp),
+                shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp)
         ) {
             Container(padding = EdgeInsets(16.dp)) {
                 Column(arrangement = Arrangement.SpaceAround) {
                     if (visible.value) {
                         textSlider(
-                            title = stringResource(R.string.config_row),
-                            initial = row,
-                            start = 5,
-                            end = maxRows,
-                            onValueChanged = { rows.value = it })
+                                title = stringResource(R.string.config_row),
+                                initial = row,
+                                start = 5,
+                                end = maxRows,
+                                onValueChanged = { rows.value = it })
                         textSlider(
-                            title = stringResource(R.string.config_column),
-                            initial = column,
-                            start = 4,
-                            end = maxCols,
-                            onValueChanged = { columns.value = it })
+                                title = stringResource(R.string.config_column),
+                                initial = column,
+                                start = 4,
+                                end = maxCols,
+                                onValueChanged = { columns.value = it })
                         textSlider(
-                            title = stringResource(R.string.config_mine),
-                            initial = mine,
-                            start = 5,
-                            end = maxMines,
-                            step = 5,
-                            onValueChanged = { mines.value = it })
+                                title = stringResource(R.string.config_mine),
+                                initial = mine,
+                                start = 5,
+                                end = maxMines,
+                                step = 5,
+                                onValueChanged = { mines.value = it })
                     } else {
                         Container(constraints = DpConstraints.fixedHeight(1.dp), expanded = true) {
                             //Text("...") //make the pane to match_parent width
@@ -478,25 +477,25 @@ object MineUi {
 
     @Composable
     private fun textSlider(
-        title: String = "",
-        start: Int = 0,
-        end: Int = 100,
-        step: Int = 1,
-        initial: Int = 0,
-        onValueChanged: ((value: Int) -> Unit)? = null
+            title: String = "",
+            start: Int = 0,
+            end: Int = 100,
+            step: Int = 1,
+            initial: Int = 0,
+            onValueChanged: ((value: Int) -> Unit)? = null
     ) {
         val position = SliderPosition(
-            initial = initial.toFloat(), steps = (end - start - step) / step,
-            valueRange = start.toFloat()..end.toFloat()
+                initial = initial.toFloat(), steps = (end - start - step) / step,
+                valueRange = start.toFloat()..end.toFloat()
         )
 
         Row {
             if (title.isNotEmpty()) {
                 Box(gravity = ContentGravity.Center) {
                     Container(
-                        constraints = DpConstraints.fixedWidth(56.dp),
-                        height = SMILEY_SIZE.dp,
-                        alignment = Alignment.Center
+                            constraints = DpConstraints.fixedWidth(56.dp),
+                            height = SMILEY_SIZE.dp,
+                            alignment = Alignment.Center
                     ) {
                         Text(title, overflow = TextOverflow.Clip)
                     }
@@ -504,9 +503,9 @@ object MineUi {
             }
             Box(gravity = ContentGravity.Center) {
                 Container(
-                    constraints = DpConstraints.fixedWidth(36.dp),
-                    height = SMILEY_SIZE.dp,
-                    alignment = Alignment.Center
+                        constraints = DpConstraints.fixedWidth(36.dp),
+                        height = SMILEY_SIZE.dp,
+                        alignment = Alignment.Center
                 ) {
                     Text("$start", style = TextStyle(color = Color.Gray))
                 }
@@ -514,19 +513,19 @@ object MineUi {
             Box(modifier = LayoutFlexible(1f)) {
                 Container(height = SMILEY_SIZE.dp, alignment = Alignment.Center) {
                     Slider(
-                        position = position,
-                        color = (MaterialTheme.colors()).secondary,
-                        onValueChangeEnd = {
-                            Log.d(TAG, "end value: ${position.value}")
-                            if (onValueChanged != null) onValueChanged(position.value.toInt())
-                        })
+                            position = position,
+                            color = (MaterialTheme.colors()).secondary,
+                            onValueChangeEnd = {
+                                Log.d(TAG, "end value: ${position.value}")
+                                if (onValueChanged != null) onValueChanged(position.value.toInt())
+                            })
                 }
             }
             Box(gravity = ContentGravity.Center) {
                 Container(
-                    constraints = DpConstraints.fixedWidth(36.dp),
-                    height = SMILEY_SIZE.dp,
-                    alignment = Alignment.Center
+                        constraints = DpConstraints.fixedWidth(36.dp),
+                        height = SMILEY_SIZE.dp,
+                        alignment = Alignment.Center
                 ) {
                     Text("$end", style = TextStyle(color = Color.Gray))
                 }

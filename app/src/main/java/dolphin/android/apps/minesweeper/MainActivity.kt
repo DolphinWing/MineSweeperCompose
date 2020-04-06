@@ -7,9 +7,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.ui.core.setContent
 
-private const val TAG = "MineActivity"
-
 class MainActivity : AppCompatActivity() {
+    companion object {
+        private const val TAG = "MineActivity"
+    }
 
     private lateinit var model: MineModel
 
@@ -21,7 +22,7 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             MineUi.mainUi(model = model) {
-                Log.d("MineUi", "on new game created: ${model.row}x${model.column}")
+                Log.d(TAG, "on new game created: ${model.row}x${model.column}")
                 if (model.funny) toastAboutFunnyModeEnabled()
             }
         }
