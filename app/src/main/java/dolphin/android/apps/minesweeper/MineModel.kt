@@ -4,13 +4,10 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.util.Log
-import android.util.SparseArray
 import android.util.SparseIntArray
-import androidx.compose.Model
-import androidx.core.util.forEach
+import androidx.compose.mutableStateOf
 import kotlin.random.Random
 
-@Model
 class MineModel(
     val maxRows: Int, val maxCols: Int
 ) {
@@ -19,22 +16,28 @@ class MineModel(
         private const val MINED = -99
     }
 
-    var gameState: GameState = GameState.Start
-    var clock: Long = 0L
-    var row: Int = 6
-    var column: Int = 5
-    var mines: Int = 10
-    var loading: Boolean = false
-    var funny: Boolean = false /* a funny mode for YA */
+    var gameState = mutableStateOf(GameState.Start)
+    var clock = mutableStateOf(0L)
+    var row = mutableStateOf(6)
+    var column = mutableStateOf(5)
+    var mines = mutableStateOf(10)
+    var loading = mutableStateOf(false)
+    var funny = mutableStateOf(BuildConfig.DEBUG) /* a funny mode for YA */
 
-    var markedMines: Int = 0
+    var markedMines = 0
+        set(value) {
+            remainingMines.value = mines.value - value
+            field = value
+        }
 
-    val remainingMines: Int
-        get() = mines - markedMines
+    var remainingMines = mutableStateOf(0)
 
     private val mineMap = SparseIntArray()
-    private val blockState = SparseArray<BlockState>()
-    fun getBlockState(row: Int, column: Int): BlockState = blockState[toIndex(row, column)]
+
+    private val mapSize: Int
+        get() = this.row.value * this.column.value
+    var blockState = Array(mapSize) { mutableStateOf(BlockState.None) }
+        private set
 
     private var firstClick: Boolean = false
 
@@ -46,38 +49,44 @@ class MineModel(
      * indicate if the game is running.
      */
     val running: Boolean
-        get() = gameState == GameState.Running || gameState == GameState.Start
-
-    private val mapSize: Int
-        get() = this.row * this.column
+        get() = gameState.value == GameState.Running || gameState.value == GameState.Start
 
     enum class BlockState {
         None, Mined, Text, Marked, Hidden
     }
 
-    fun generateMineMap(row: Int = this.row, column: Int = this.column, mines: Int = this.mines) {
-        loading = true
+    init {
+        generateMineMap()
+    }
+
+    fun generateMineMap(
+        row: Int = this.row.value,
+        column: Int = this.column.value,
+        mines: Int = this.mines.value
+    ) {
+        loading.value = true
         mineMap.clear()
 
-        this.row = row
-        this.column = column
+        this.row.value = row
+        this.column.value = column
 
-        this.mines = if (mines > mapSize) mapSize else mines //ensure mines smaller than map size
-        Log.v(TAG, "create ${row}x$column with ${this.mines} mines")
+        this.mines.value =
+            if (mines > mapSize) mapSize else mines //ensure mines smaller than map size
+        Log.v(TAG, "create ${row}x$column with ${this.mines.value} mines")
 
         markedMines = 0 //reset counter
-        clock = 0 //reset clock
+        clock.value = 0L //reset clock
 
         putMinesIntoField()
-        calculateField()
+        calculateField() //generateMineMap
 
-        gameState = GameState.Start
-        loading = false
+        gameState.value = GameState.Start
+        loading.value = false
         firstClick = true
     }
 
     private fun putMinesIntoField() {
-        repeat(this.mines) {
+        repeat(this.mines.value) {
             mineMap.put(randomNewMine(), MINED)
         }
     }
@@ -91,6 +100,7 @@ class MineModel(
     }
 
     private fun calculateField() {
+        blockState = Array(mapSize) { mutableStateOf(BlockState.None) }
         repeat(mapSize) { index ->
             if (!mineExists(index)) {//check 8-directions
                 var count = 0
@@ -108,11 +118,10 @@ class MineModel(
                 }
                 mineMap.put(index, count)
             }
-            blockState.put(index, BlockState.None)
         }
     }
 
-    private fun toIndex(row: Int, column: Int) = row * this.column + column
+    fun toIndex(row: Int, column: Int) = row * this.column.value + column
 
     private fun mineExists(index: Int): Boolean = if (index in 0 until mapSize)
         mineMap[index] == MINED else false
@@ -124,40 +133,40 @@ class MineModel(
         return mineMap[toIndex(row, column)]
     }
 
-    private fun toRow(index: Int): Int = index / this.column
-    private fun toColumn(index: Int): Int = index % this.column
+    private fun toRow(index: Int): Int = index / this.column.value
+    private fun toColumn(index: Int): Int = index % this.column.value
     private fun notFirstRow(index: Int): Boolean = toRow(index) != 0
-    private fun notLastRow(index: Int): Boolean = toRow(index) != (this.row - 1)
+    private fun notLastRow(index: Int): Boolean = toRow(index) != (this.row.value - 1)
     private fun notFirstColumn(index: Int): Boolean = toColumn(index) != 0
-    private fun notLastColumn(index: Int): Boolean = toColumn(index) != (this.column - 1)
+    private fun notLastColumn(index: Int): Boolean = toColumn(index) != (this.column.value - 1)
 
     private fun toNorthWestIndex(index: Int): Int = toWestIndex(toNorthIndex(index))
-    private fun toNorthIndex(index: Int): Int = index - this.column
+    private fun toNorthIndex(index: Int): Int = index - this.column.value
     private fun toNorthEastIndex(index: Int): Int = toEastIndex(toNorthIndex(index))
     private fun toWestIndex(index: Int): Int = index - 1
     private fun toEastIndex(index: Int): Int = index + 1
     private fun toSouthWestIndex(index: Int): Int = toWestIndex(toSouthIndex(index))
-    private fun toSouthIndex(index: Int): Int = index + this.column
+    private fun toSouthIndex(index: Int): Int = index + this.column.value
     private fun toSouthEastIndex(index: Int): Int = toEastIndex(toSouthIndex(index))
 
     fun changeState(row: Int, column: Int, state: BlockState) {
         //loading = false
-        blockState.put(toIndex(row, column), state)
+        blockState[toIndex(row, column)].value = state
         //loading = true
     }
 
-    private fun isBlockNotOpen(index: Int): Boolean = when (blockState[index]) {
+    private fun isBlockNotOpen(index: Int): Boolean = when (blockState[index].value) {
         BlockState.None -> true
         else -> false
     }
 
     fun markAsMine(row: Int, column: Int): GameState {
-        if (gameState == GameState.Review) return GameState.Review
+        if (gameState.value == GameState.Review) return GameState.Review
         changeState(row, column, BlockState.Marked)
         markedMines++
-        gameState = if (verifyMineClear()) GameState.Cleared else GameState.Running
-        if (gameState == GameState.Cleared) Log.v(TAG, "You won!")
-        return gameState
+        gameState.value = if (verifyMineClear()) GameState.Cleared else GameState.Running
+        if (gameState.value == GameState.Cleared) Log.v(TAG, "You won!")
+        return gameState.value
     }
 
     /**
@@ -165,8 +174,8 @@ class MineModel(
      */
     private fun verifyMineClear(): Boolean {
         val suspects = ArrayList<Int>()
-        blockState.forEach { key, value ->
-            if (value == BlockState.None || value == BlockState.Marked) suspects.add(key)
+        blockState.forEachIndexed { key, state ->
+            if (state.value == BlockState.None || state.value == BlockState.Marked) suspects.add(key)
         }
         //Log.d(TAG, "verify mines: ${suspects.size} ${suspects.none { !mineExists(it) }}")
         return suspects.none { !mineExists(it) }
@@ -183,7 +192,7 @@ class MineModel(
     private val clockHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             if (running) {
-                clock++
+                clock.value++
                 tick()
             }
         }
@@ -194,20 +203,20 @@ class MineModel(
     }
 
     fun stepOn(row: Int, column: Int): GameState {
-        if (gameState == GameState.Review) return GameState.Review
-        gameState = if (mineExists(row, column)) {
+        if (gameState.value == GameState.Review) return GameState.Review
+        gameState.value = if (mineExists(row, column)) {
             if (firstClick) {//recalculate mine map because first click cannot be a mine
                 Log.w(TAG, "recalculate mine map")
-                loading = true
+                loading.value = true
                 moveMineToAnotherPlace(toIndex(row, column)) //move to another place
                 calculateField() //recalculate map
-                loading = false
+                loading.value = false
                 return stepOn(row, column) //step on again, won't be a mine
             } else {
                 //reveal not marked mines
-                blockState.forEach { key, _ ->
-                    if (mineExists(key) && blockState[key] != BlockState.Marked) {
-                        blockState.put(key, BlockState.Hidden)
+                blockState.forEachIndexed { key, block ->
+                    if (mineExists(key) && block.value != BlockState.Marked) {
+                        block.value = BlockState.Hidden
                     }
                 }
                 changeState(row, column, BlockState.Mined)
@@ -225,13 +234,13 @@ class MineModel(
             clockHandler.tick()
             firstClick = false //mark that we have click at least one block
         }
-        return gameState
+        return gameState.value
     }
 
     private fun stepOn0(index: Int) {
         if (isBlockNotOpen(index)) {
             //stepOn(toRow(index), toColumn(index))
-            blockState.put(index, BlockState.Text)
+            blockState[index].value = BlockState.Text
             if (mineMap.get(index) == 0) {//auto click
                 autoClick0(index)
             }
@@ -250,12 +259,14 @@ class MineModel(
     }
 
     private var funnyCount = 0
+    private val soFunny: Boolean
+        get() = row.value == 5 && column.value == 4 && mines.value == 5
 
     fun onTheWayToFunnyMode(): Boolean {
-        if (row == 5 && column == 4 && mines == 5 && ++funnyCount == 10) {
+        if (soFunny && ++funnyCount == 10) {
             Log.w(TAG, "enable YA mode!")
-            funny = true
+            funny.value = true
         }
-        return row == 5 && column == 4 && mines == 5
+        return soFunny
     }
 }

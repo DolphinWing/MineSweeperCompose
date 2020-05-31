@@ -3,6 +3,7 @@ package dolphin.android.apps.minesweeper
 import android.util.DisplayMetrics
 import android.util.Log
 import androidx.compose.Composable
+import androidx.compose.remember
 import androidx.compose.state
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContentScale
@@ -51,21 +52,21 @@ object MineUi {
 
     @Composable
     fun mainUi(
-        model: MineModel,
+        //model: MineModel,
         rows: Int,
         column: Int,
         onNewGameCreated: ((model: MineModel) -> Unit)? = null
     ) {
-        //val model = MineModel(rows, column)
+        val model = remember { MineModel(rows, column) }
 
         contentViewWidget(
             maxRows = model.maxRows,
             maxCols = model.maxCols,
             maxMines = 40,
-            row = model.row,
-            column = model.column,
-            mines = model.mines,
-            loading = model.loading,
+            row = model.row.value,
+            column = model.column.value,
+            mines = model.mines.value,
+            loading = model.loading.value,
             onNewGameCreated = onNewGameCreated,
             model = model
         )
@@ -158,7 +159,7 @@ object MineUi {
                     onNewGameCreated?.invoke(model)
                 }// ?: kotlin.run { Log.e(TAG, "no model... HOW???") }
             })) {
-                smileyIcon(model?.gameState ?: MineModel.GameState.Start)
+                smileyIcon(model?.gameState?.value ?: MineModel.GameState.Start)
             }
             Box(Modifier.weight(1f)) {
                 playClockWidget(model = model)
@@ -170,7 +171,7 @@ object MineUi {
     private fun mineCountWidget(model: MineModel?) {
         Box(modifier = Modifier.width(120.dp), paddingStart = 32.dp, paddingEnd = 32.dp) {
             Text(
-                String.format("%03d", model?.remainingMines ?: 0),
+                String.format("%03d", model?.remainingMines?.value ?: 0),
                 style = TextStyle(
                     color = Color.Red,
                     fontSize = 24.sp,
@@ -196,7 +197,7 @@ object MineUi {
     private fun playClockWidget(model: MineModel?) {
         Box(modifier = Modifier.width(120.dp), paddingStart = 16.dp, paddingEnd = 8.dp) {
             Text(
-                String.format("%05d", model?.clock ?: 0),
+                String.format("%05d", model?.clock?.value ?: 0),
                 style = TextStyle(
                     color = Color.Red,
                     fontSize = 24.sp,
@@ -212,7 +213,13 @@ object MineUi {
             repeat(row) { r ->
                 Row() {
                     repeat(column) { c ->
-                        blockButton(model = model, row = r, column = c)
+                        blockButton(
+                            model = model,
+                            row = r,
+                            column = c,
+                            blockState = model?.blockState?.get(model.toIndex(r, c))?.value
+                                ?: MineModel.BlockState.None
+                        )
                     }
                 }
             }
@@ -220,8 +227,13 @@ object MineUi {
     }
 
     @Composable
-    private fun blockButton(model: MineModel?, row: Int, column: Int) {
-        when (model?.getBlockState(row, column)) {
+    private fun blockButton(
+        model: MineModel?,
+        row: Int,
+        column: Int,
+        blockState: MineModel.BlockState
+    ) {
+        when (blockState) {
             MineModel.BlockState.Marked ->
                 markedBlock(model, row, column)
             MineModel.BlockState.Mined ->
@@ -231,30 +243,12 @@ object MineUi {
             MineModel.BlockState.Text ->
                 textBlock(model, row, column, debug = false)
             else ->
-                Box(modifier = Modifier.clickable(onClick = {
-                    if (model?.running == true) {
-                        model.stepOn(row, column)
-                    } else {
-                        Log.w(TAG, "current game state: ${model?.gameState}")
-                    }
-                }).plus(Modifier.longPressGestureFilter {
-                    if (model?.running == true) {
-                        if (model.markedMines <= model.mines) {
-                            model.markAsMine(row, column)
-                        } else {
-                            Log.e(TAG, "too many mines!!!")
-                        }
-                    } else {
-                        Log.w(TAG, "current game state: ${model?.gameState}")
-                    }
-                })) {
-                    baseBlock(
-                        model = model,
-                        row = row,
-                        column = column,
-                        debug = model?.funny ?: false
-                    )
-                }
+                baseBlock(
+                    model = model,
+                    row = row,
+                    column = column,
+                    debug = model?.funny?.value ?: false
+                )
         }
     }
 
@@ -265,7 +259,23 @@ object MineUi {
         column: Int,
         debug: Boolean = BuildConfig.DEBUG
     ) {
-        Box(modifier = Modifier.size(BLOCK_SIZE.dp, BLOCK_SIZE.dp)) {
+        Box(modifier = Modifier.clickable(onClick = {
+            if (model?.running == true) {
+                model.stepOn(row, column)
+            } else {
+                Log.w(TAG, "current game state: ${model?.gameState?.value}")
+            }
+        }) + Modifier.longPressGestureFilter {
+            if (model?.running == true) {
+                if (model.markedMines <= model.mines.value) {
+                    model.markAsMine(row, column)
+                } else {
+                    Log.e(TAG, "too many mines!!!")
+                }
+            } else {
+                Log.w(TAG, "current game state: ${model?.gameState?.value}")
+            }
+        } + Modifier.size(BLOCK_SIZE.dp, BLOCK_SIZE.dp)) {
             Stack {
                 Box { imageDrawable(image = imageResource(R.drawable.box)) }
                 if (debug) Box { textBlock(model, row, column, debug = debug) }
@@ -396,9 +406,9 @@ object MineUi {
 
         fun restoreConfig() {
             //reset values to current config
-            rows.value = model?.row ?: 6
-            columns.value = model?.column ?: 5
-            mines.value = model?.mines ?: 10
+            rows.value = model?.row?.value ?: 6
+            columns.value = model?.column?.value ?: 5
+            mines.value = model?.mines?.value ?: 10
             //hide config pane
             visible.value = visible.value.not()
         }

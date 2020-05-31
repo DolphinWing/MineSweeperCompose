@@ -10,7 +10,7 @@ android {
         applicationId "dolphin.android.apps.minesweeper"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 9
+        versionCode 10
         versionName "1.0.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
