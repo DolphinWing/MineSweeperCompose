@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         model = MineModel(maxRows = maxSize.first, maxCols = maxSize.second)
 
         setContent {
-            MineUi.mainUi(model = model) {
+            MineUi.mainUi(model, maxSize.first, maxSize.second) { model ->
                 Log.d(TAG, "on new game created: ${model.row}x${model.column}")
                 if (model.funny) toastAboutFunnyModeEnabled()
             }

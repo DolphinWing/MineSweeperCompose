@@ -50,7 +50,14 @@ object MineUi {
     }
 
     @Composable
-    fun mainUi(model: MineModel, onNewGameCreated: (() -> Unit)? = null) {
+    fun mainUi(
+        model: MineModel,
+        rows: Int,
+        column: Int,
+        onNewGameCreated: ((model: MineModel) -> Unit)? = null
+    ) {
+        //val model = MineModel(rows, column)
+
         contentViewWidget(
             maxRows = model.maxRows,
             maxCols = model.maxCols,
@@ -90,7 +97,7 @@ object MineUi {
         mines: Int = 10,
         loading: Boolean = false,
         model: MineModel? = null,
-        onNewGameCreated: (() -> Unit)? = null
+        onNewGameCreated: ((model: MineModel) -> Unit)? = null
     ) {
         MaterialTheme(
             colors = lightColorPalette(
@@ -137,7 +144,10 @@ object MineUi {
     }
 
     @Composable
-    private fun headerWidget(model: MineModel?, onNewGameCreated: (() -> Unit)? = null) {
+    private fun headerWidget(
+        model: MineModel?,
+        onNewGameCreated: ((model: MineModel) -> Unit)? = null
+    ) {
         Row(Modifier.padding(32.dp), verticalGravity = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) {
                 mineCountWidget(model = model)
@@ -145,7 +155,7 @@ object MineUi {
             Box(modifier = Modifier.clickable(onClick = {
                 model?.let { that ->
                     that.generateMineMap()
-                    if (onNewGameCreated != null) onNewGameCreated()
+                    onNewGameCreated?.invoke(model)
                 }// ?: kotlin.run { Log.e(TAG, "no model... HOW???") }
             })) {
                 smileyIcon(model?.gameState ?: MineModel.GameState.Start)
@@ -368,7 +378,7 @@ object MineUi {
         column: Int = 5,
         mine: Int = 10,
         showConfig: Boolean = false,
-        onNewGameCreated: (() -> Unit)? = null
+        onNewGameCreated: ((model: MineModel) -> Unit)? = null
     ) {
         val visible = state { showConfig }
         val rows = state { row }
@@ -434,7 +444,7 @@ object MineUi {
                             if (visible.value) {
                                 Button(onClick = {
                                     applyNewConfig()
-                                    if (onNewGameCreated != null) onNewGameCreated()
+                                    if (model != null) onNewGameCreated?.invoke(model)
                                 }) {
                                     Text(stringResource(R.string.action_apply))
                                 }
