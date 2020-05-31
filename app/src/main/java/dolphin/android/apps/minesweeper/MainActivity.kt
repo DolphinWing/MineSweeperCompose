@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        model.state = MineModel.GameState.Destroyed
+        model.gameState = MineModel.GameState.Destroyed
     }
 
     private var toasted: Boolean = false

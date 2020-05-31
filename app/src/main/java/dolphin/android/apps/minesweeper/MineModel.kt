@@ -12,20 +12,22 @@ import kotlin.random.Random
 
 @Model
 class MineModel(
-    val maxRows: Int, val maxCols: Int,
-    var state: GameState = GameState.Start,
-    var clock: Long = 0L,
-    var row: Int = 6,
-    var column: Int = 5,
-    var mines: Int = 10,
-    var markedMines: Int = 0,
-    var loading: Boolean = false,
-    var funny: Boolean = false /* a funny mode for YA */
+    val maxRows: Int, val maxCols: Int
 ) {
     companion object {
         private const val TAG = "MineModel"
         private const val MINED = -99
     }
+
+    var gameState: GameState = GameState.Start
+    var clock: Long = 0L
+    var row: Int = 6
+    var column: Int = 5
+    var mines: Int = 10
+    var loading: Boolean = false
+    var funny: Boolean = false /* a funny mode for YA */
+
+    var markedMines: Int = 0
 
     val remainingMines: Int
         get() = mines - markedMines
@@ -44,7 +46,7 @@ class MineModel(
      * indicate if the game is running.
      */
     val running: Boolean
-        get() = state == GameState.Running || state == GameState.Start
+        get() = gameState == GameState.Running || gameState == GameState.Start
 
     private val mapSize: Int
         get() = this.row * this.column
@@ -69,7 +71,7 @@ class MineModel(
         putMinesIntoField()
         calculateField()
 
-        state = GameState.Start
+        gameState = GameState.Start
         loading = false
         firstClick = true
     }
@@ -150,12 +152,12 @@ class MineModel(
     }
 
     fun markAsMine(row: Int, column: Int): GameState {
-        if (state == GameState.Review) return GameState.Review
+        if (gameState == GameState.Review) return GameState.Review
         changeState(row, column, BlockState.Marked)
         markedMines++
-        state = if (verifyMineClear()) GameState.Cleared else GameState.Running
-        if (state == GameState.Cleared) Log.v(TAG, "You won!")
-        return state
+        gameState = if (verifyMineClear()) GameState.Cleared else GameState.Running
+        if (gameState == GameState.Cleared) Log.v(TAG, "You won!")
+        return gameState
     }
 
     /**
@@ -192,8 +194,8 @@ class MineModel(
     }
 
     fun stepOn(row: Int, column: Int): GameState {
-        if (state == GameState.Review) return GameState.Review
-        state = if (mineExists(row, column)) {
+        if (gameState == GameState.Review) return GameState.Review
+        gameState = if (mineExists(row, column)) {
             if (firstClick) {//recalculate mine map because first click cannot be a mine
                 Log.w(TAG, "recalculate mine map")
                 loading = true
@@ -223,7 +225,7 @@ class MineModel(
             clockHandler.tick()
             firstClick = false //mark that we have click at least one block
         }
-        return state
+        return gameState
     }
 
     private fun stepOn0(index: Int) {

@@ -10,7 +10,7 @@ android {
         applicationId "dolphin.android.apps.minesweeper"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 8
+        versionCode 9
         versionName "1.0.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -33,8 +33,13 @@ android {
         compose true
     }
     composeOptions {
+        kotlinCompilerVersion "1.3.70-dev-withExperimentalGoogleExtensions-20200424"
         kotlinCompilerExtensionVersion "$compose_compiler_extension_version"
     }
+}
+
+configurations {
+    ktlint
 }
 
 dependencies {
@@ -42,10 +47,10 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation('androidx.activity:activity-ktx:1.1.0')
-    implementation 'androidx.core:core-ktx:1.2.0'
+    implementation 'androidx.core:core-ktx:1.3.0'
 
     implementation("androidx.compose:compose-runtime:$compose_version")
-    implementation("androidx.ui:ui-framework:$compose_version")
+    implementation("androidx.ui:ui-core:$compose_version")
     implementation("androidx.ui:ui-layout:$compose_version")
     implementation("androidx.ui:ui-material:$compose_version")
     implementation("androidx.ui:ui-foundation:$compose_version")
@@ -56,6 +61,24 @@ dependencies {
     androidTestImplementation("junit:junit:4.13")
     androidTestImplementation("androidx.test:rules:1.2.0")
     androidTestImplementation("androidx.test:runner:1.2.0")
-    androidTestImplementation("androidx.ui:ui-platform:$compose_version")
+    androidTestImplementation("androidx.ui:ui-core:$compose_version")
     androidTestImplementation("androidx.ui:ui-test:$compose_version")
+
+    ktlint "com.pinterest:ktlint:0.36.0"
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    main = "com.pinterest.ktlint.Main"
+    classpath = configurations.ktlint
+    args "src/**/*.kt"
+}
+
+check.dependsOn ktlint
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    main = "com.pinterest.ktlint.Main"
+    classpath = configurations.ktlint
+    args "-F", "src/**/*.kt"
 }
