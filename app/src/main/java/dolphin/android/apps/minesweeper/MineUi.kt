@@ -9,12 +9,12 @@ import androidx.ui.core.Alignment
 import androidx.ui.core.ContentScale
 import androidx.ui.core.Modifier
 import androidx.ui.core.gesture.longPressGestureFilter
-import androidx.ui.foundation.*
+import androidx.ui.foundation.* // ktlint-disable no-wildcard-imports
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.ImageAsset
-import androidx.ui.layout.*
-import androidx.ui.material.*
+import androidx.ui.layout.* // ktlint-disable no-wildcard-imports
+import androidx.ui.material.* // ktlint-disable no-wildcard-imports
 import androidx.ui.res.colorResource
 import androidx.ui.res.imageResource
 import androidx.ui.res.stringResource
@@ -52,7 +52,6 @@ object MineUi {
 
     @Composable
     fun mainUi(
-        //model: MineModel,
         rows: Int,
         column: Int,
         onNewGameCreated: ((model: MineModel) -> Unit)? = null
@@ -157,7 +156,7 @@ object MineUi {
                 model?.let { that ->
                     that.generateMineMap()
                     onNewGameCreated?.invoke(model)
-                }// ?: kotlin.run { Log.e(TAG, "no model... HOW???") }
+                } // ?: kotlin.run { Log.e(TAG, "no model... HOW???") }
             })) {
                 smileyIcon(model?.gameState?.value ?: MineModel.GameState.Start)
             }
@@ -209,9 +208,9 @@ object MineUi {
 
     @Composable
     private fun mineField(model: MineModel?, row: Int, column: Int) {
-        Column() {
+        Column {
             repeat(row) { r ->
-                Row() {
+                Row {
                     repeat(column) { c ->
                         blockButton(
                             model = model,
@@ -311,10 +310,10 @@ object MineUi {
 
     @Composable
     private fun textBlock(model: MineModel?, row: Int, column: Int, debug: Boolean = false) {
-        //Log.d(TAG, "textBlock: $row $column $debug")
+        // Log.d(TAG, "textBlock: $row $column $debug")
         val value = model?.getMineIndicator(row, column) ?: 0
         if (debug) {
-            //TextBlock(value = value, defaultColor = Color.Gray)
+            // TextBlock(value = value, defaultColor = Color.Gray)
             Box(modifier = Modifier.size(BLOCK_SIZE.dp), gravity = ContentGravity.Center) {
                 Text(
                     if (value < 0) "*" else "$value",
@@ -367,8 +366,8 @@ object MineUi {
                     markedBlock(row = 0, column = 0)
                     mineBlock(clicked = false)
                     mineBlock(clicked = true)
-                    //TextBlock(value = 7)
-                    //TextBlock(value = 8)
+                    // TextBlock(value = 7)
+                    // TextBlock(value = 8)
                 }
                 Row {
                     repeat(7) { textBlock(value = it) }
@@ -405,18 +404,18 @@ object MineUi {
         }
 
         fun restoreConfig() {
-            //reset values to current config
+            // reset values to current config
             rows.value = model?.row?.value ?: 6
             columns.value = model?.column?.value ?: 5
             mines.value = model?.mines?.value ?: 10
-            //hide config pane
+            // hide config pane
             visible.value = visible.value.not()
         }
 
         Surface(
             color = if (visible.value) Color.White else Color.Transparent,
             elevation = if (visible.value) 8.dp else 0.dp,
-            //border = Border(Color.LightGray, 1.dp),
+            // border = Border(Color.LightGray, 1.dp),
             shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp)
         ) {
             Box(padding = 16.dp) {
@@ -443,7 +442,7 @@ object MineUi {
                             onValueChanged = { mines.value = it })
                     } else {
                         Box(modifier = Modifier.height(1.dp)) {
-                            //Text("...") //make the pane to match_parent width
+                            // Text("...") // make the pane to match_parent width
                         }
                     }
                     Box(modifier = Modifier.fillMaxWidth(), paddingTop = 8.dp) {
@@ -475,8 +474,6 @@ object MineUi {
         initial: Int = 0,
         onValueChanged: ((value: Int) -> Unit)? = null
     ) {
-        //var position by state { initial.toFloat() }
-        //var position: Float = initial.toFloat()
         val position = state { initial.toFloat() }
 
         Row(verticalGravity = Alignment.CenterVertically) {

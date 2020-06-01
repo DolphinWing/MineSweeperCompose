@@ -8,9 +8,7 @@ import android.util.SparseIntArray
 import androidx.compose.mutableStateOf
 import kotlin.random.Random
 
-class MineModel(
-    val maxRows: Int, val maxCols: Int
-) {
+class MineModel(val maxRows: Int, val maxCols: Int) {
     companion object {
         private const val TAG = "MineModel"
         private const val MINED = -99
@@ -71,14 +69,14 @@ class MineModel(
         this.column.value = column
 
         this.mines.value =
-            if (mines > mapSize) mapSize else mines //ensure mines smaller than map size
+            if (mines > mapSize) mapSize else mines // ensure mines smaller than map size
         Log.v(TAG, "create ${row}x$column with ${this.mines.value} mines")
 
-        markedMines = 0 //reset counter
-        clock.value = 0L //reset clock
+        markedMines = 0 // reset counter
+        clock.value = 0L // reset clock
 
         putMinesIntoField()
-        calculateField() //generateMineMap
+        calculateField() // generateMineMap
 
         gameState.value = GameState.Start
         loading.value = false
@@ -102,7 +100,7 @@ class MineModel(
     private fun calculateField() {
         blockState = Array(mapSize) { mutableStateOf(BlockState.None) }
         repeat(mapSize) { index ->
-            if (!mineExists(index)) {//check 8-directions
+            if (!mineExists(index)) { // check 8-directions
                 var count = 0
                 if (notFirstRow(index)) {
                     if (notFirstColumn(index) && mineExists(toNorthWestIndex(index))) ++count
@@ -129,7 +127,7 @@ class MineModel(
     private fun mineExists(row: Int, column: Int) = mineExists(toIndex(row, column))
 
     fun getMineIndicator(row: Int, column: Int): Int {
-        //Log.d(TAG, "==> ${toIndex(row, column)} ${mineMap[toIndex(row, column)]}")
+        // Log.d(TAG, "==> ${toIndex(row, column)} ${mineMap[toIndex(row, column)]}")
         return mineMap[toIndex(row, column)]
     }
 
@@ -150,9 +148,9 @@ class MineModel(
     private fun toSouthEastIndex(index: Int): Int = toEastIndex(toSouthIndex(index))
 
     fun changeState(row: Int, column: Int, state: BlockState) {
-        //loading = false
+        // loading = false
         blockState[toIndex(row, column)].value = state
-        //loading = true
+        // loading = true
     }
 
     private fun isBlockNotOpen(index: Int): Boolean = when (blockState[index].value) {
@@ -177,12 +175,12 @@ class MineModel(
         blockState.forEachIndexed { key, state ->
             if (state.value == BlockState.None || state.value == BlockState.Marked) suspects.add(key)
         }
-        //Log.d(TAG, "verify mines: ${suspects.size} ${suspects.none { !mineExists(it) }}")
+        // Log.d(TAG, "verify mines: ${suspects.size} ${suspects.none { !mineExists(it) }}")
         return suspects.none { !mineExists(it) }
     }
 
     private fun moveMineToAnotherPlace(oldIndex: Int) {
-        mineMap.put(oldIndex, 0) //remove mine
+        mineMap.put(oldIndex, 0) // remove mine
         var newIndex = randomNewMine()
         while (newIndex == oldIndex) newIndex = randomNewMine()
         Log.v(TAG, "move $oldIndex to $newIndex")
@@ -205,15 +203,15 @@ class MineModel(
     fun stepOn(row: Int, column: Int): GameState {
         if (gameState.value == GameState.Review) return GameState.Review
         gameState.value = if (mineExists(row, column)) {
-            if (firstClick) {//recalculate mine map because first click cannot be a mine
+            if (firstClick) { // recalculate mine map because first click cannot be a mine
                 Log.w(TAG, "recalculate mine map")
                 loading.value = true
-                moveMineToAnotherPlace(toIndex(row, column)) //move to another place
-                calculateField() //recalculate map
+                moveMineToAnotherPlace(toIndex(row, column)) // move to another place
+                calculateField() // recalculate map
                 loading.value = false
-                return stepOn(row, column) //step on again, won't be a mine
+                return stepOn(row, column) // step on again, won't be a mine
             } else {
-                //reveal not marked mines
+                // reveal not marked mines
                 blockState.forEachIndexed { key, block ->
                     if (mineExists(key) && block.value != BlockState.Marked) {
                         block.value = BlockState.Hidden
@@ -223,25 +221,24 @@ class MineModel(
                 Log.v(TAG, "Game over! you lost!!")
                 GameState.Exploded
             }
-        } else {//not mine, reveal it
+        } else { // not mine, reveal it
             changeState(row, column, BlockState.Text)
-            if (mineMap.get(toIndex(row, column)) == 0) {//auto click
+            if (mineMap.get(toIndex(row, column)) == 0) { // auto click
                 autoClick0(toIndex(row, column))
             }
             if (verifyMineClear()) GameState.Cleared else GameState.Running
         }
         if (firstClick) {
             clockHandler.tick()
-            firstClick = false //mark that we have click at least one block
+            firstClick = false // mark that we have click at least one block
         }
         return gameState.value
     }
 
     private fun stepOn0(index: Int) {
         if (isBlockNotOpen(index)) {
-            //stepOn(toRow(index), toColumn(index))
             blockState[index].value = BlockState.Text
-            if (mineMap.get(index) == 0) {//auto click
+            if (mineMap.get(index) == 0) { // auto click
                 autoClick0(index)
             }
         }
