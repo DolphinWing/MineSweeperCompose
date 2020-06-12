@@ -341,7 +341,6 @@ object MineUi {
         }
     }
 
-
     @Composable
     private fun configPane(
         model: MineModel?,
@@ -506,4 +505,3 @@ private fun previewBlocks() {
         }
     }
 }
-
