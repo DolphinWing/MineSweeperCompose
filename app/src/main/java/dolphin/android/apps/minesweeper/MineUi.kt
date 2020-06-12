@@ -71,23 +71,8 @@ object MineUi {
         )
     }
 
-    @Preview("Default layout")
     @Composable
-    private fun defaultPreview() {
-        contentViewWidget(
-            maxCols = 10,
-            maxRows = 10,
-            maxMines = 20,
-            row = 6,
-            column = 5,
-            mines = 15,
-            showConfig = true,
-            loading = false
-        )
-    }
-
-    @Composable
-    private fun contentViewWidget(
+    fun contentViewWidget(
         maxRows: Int = 12,
         maxCols: Int = 8,
         maxMines: Int = 40,
@@ -226,11 +211,12 @@ object MineUi {
     }
 
     @Composable
-    private fun blockButton(
-        model: MineModel?,
-        row: Int,
-        column: Int,
-        blockState: MineModel.BlockState
+    fun blockButton(
+        model: MineModel? = null,
+        row: Int = 0,
+        column: Int = 0,
+        blockState: MineModel.BlockState = MineModel.BlockState.None,
+        debug: Boolean? = null
     ) {
         when (blockState) {
             MineModel.BlockState.Marked ->
@@ -240,13 +226,13 @@ object MineUi {
             MineModel.BlockState.Hidden ->
                 mineBlock(clicked = false)
             MineModel.BlockState.Text ->
-                textBlock(model, row, column, debug = false)
+                textBlock(model, row, column, debug = debug ?: false)
             else ->
                 baseBlock(
                     model = model,
                     row = row,
                     column = column,
-                    debug = model?.funny?.value ?: false
+                    debug = debug ?: model?.funny?.value ?: false
                 )
         }
     }
@@ -264,7 +250,7 @@ object MineUi {
             } else {
                 Log.w(TAG, "current game state: ${model?.gameState?.value}")
             }
-        }) + Modifier.longPressGestureFilter {
+        }).longPressGestureFilter {
             if (model?.running == true) {
                 if (model.markedMines <= model.mines.value) {
                     model.markAsMine(row, column)
@@ -274,7 +260,7 @@ object MineUi {
             } else {
                 Log.w(TAG, "current game state: ${model?.gameState?.value}")
             }
-        } + Modifier.size(BLOCK_SIZE.dp, BLOCK_SIZE.dp)) {
+        }.size(BLOCK_SIZE.dp, BLOCK_SIZE.dp)) {
             Stack {
                 Box { imageDrawable(image = imageResource(R.drawable.box)) }
                 if (debug) Box { textBlock(model, row, column, debug = debug) }
@@ -284,7 +270,7 @@ object MineUi {
 
     @Composable
     private fun markedBlock(model: MineModel? = null, row: Int, column: Int) {
-        Box(modifier = Modifier.size(BLOCK_SIZE.dp) + Modifier.longPressGestureFilter {
+        Box(modifier = Modifier.size(BLOCK_SIZE.dp).longPressGestureFilter {
             if (model?.running == true) {
                 model.changeState(row, column, MineModel.BlockState.None)
                 --model.markedMines
@@ -338,7 +324,7 @@ object MineUi {
     }
 
     @Composable
-    private fun textBlock(value: Int) {
+    internal fun textBlock(value: Int) {
         Box(
             modifier = Modifier.size(BLOCK_SIZE.dp),
             gravity = ContentGravity.Center,
@@ -355,27 +341,6 @@ object MineUi {
         }
     }
 
-    @Preview("Mine block preview")
-    @Composable
-    private fun previewBlocks() {
-        MaterialTheme {
-            Column {
-                Row {
-                    baseBlock(row = 0, column = 0, debug = true)
-                    baseBlock(row = 0, column = 0, debug = false)
-                    markedBlock(row = 0, column = 0)
-                    mineBlock(clicked = false)
-                    mineBlock(clicked = true)
-                    // TextBlock(value = 7)
-                    // TextBlock(value = 8)
-                }
-                Row {
-                    repeat(7) { textBlock(value = it) }
-                    textBlock(value = -99)
-                }
-            }
-        }
-    }
 
     @Composable
     private fun configPane(
@@ -501,6 +466,42 @@ object MineUi {
             }
             Box(modifier = Modifier.width(36.dp)) {
                 Text("$end", style = TextStyle(color = Color.Gray))
+            }
+        }
+    }
+}
+
+@Preview(name = "Default layout")
+@Composable
+private fun defaultPreview() {
+    MineUi.contentViewWidget(
+        maxCols = 10,
+        maxRows = 10,
+        maxMines = 20,
+        row = 6,
+        column = 5,
+        mines = 15,
+        showConfig = true,
+        loading = false
+    )
+}
+
+@Preview(name = "Mine block preview")
+@Composable
+private fun previewBlocks() {
+    MaterialTheme {
+        Column {
+            Row {
+                MineUi.blockButton(debug = true)
+                MineUi.blockButton(debug = false)
+                MineUi.blockButton(blockState = MineModel.BlockState.Marked)
+                MineUi.blockButton(blockState = MineModel.BlockState.Mined)
+                MineUi.blockButton(blockState = MineModel.BlockState.Hidden)
+                MineUi.blockButton(blockState = MineModel.BlockState.Text, debug = true)
+                MineUi.blockButton(blockState = MineModel.BlockState.Text, debug = false)
+            }
+            Row {
+                repeat(8) { MineUi.textBlock(value = it) }
             }
         }
     }
