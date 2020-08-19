@@ -60,7 +60,7 @@ dependencies {
     androidTestImplementation("junit:junit:4.13")
     androidTestImplementation("androidx.test:rules:1.2.0")
     androidTestImplementation("androidx.test:runner:1.2.0")
-    androidTestImplementation("androidx.ui:ui-core:$compose_version")
+    // androidTestImplementation("androidx.compose.ui:ui:$compose_version")
     androidTestImplementation("androidx.ui:ui-test:$compose_version")
 
     ktlint "com.pinterest:ktlint:0.36.0"
@@ -80,4 +80,11 @@ task ktlintFormat(type: JavaExec, group: "formatting") {
     main = "com.pinterest.ktlint.Main"
     classpath = configurations.ktlint
     args "-F", "src/**/*.kt"
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs += ["-Xallow-jvm-ir-dependencies", "-Xskip-prerelease-check"]
+    }
 }
