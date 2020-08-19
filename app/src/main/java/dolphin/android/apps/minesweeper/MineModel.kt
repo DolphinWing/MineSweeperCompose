@@ -5,7 +5,7 @@ import android.os.Looper
 import android.os.Message
 import android.util.Log
 import android.util.SparseIntArray
-import androidx.compose.mutableStateOf
+import androidx.compose.runtime.mutableStateOf
 import kotlin.random.Random
 
 class MineModel(val maxRows: Int, val maxCols: Int) {
