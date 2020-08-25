@@ -60,7 +60,7 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
     fun generateMineMap(
         row: Int = this.row.value,
         column: Int = this.column.value,
-        mines: Int = this.mines.value
+        mines: Int = this.mines.value,
     ) {
         loading.value = true
         mineMap.clear()

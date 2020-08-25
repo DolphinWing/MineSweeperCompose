@@ -2,7 +2,7 @@ package dolphin.android.apps.minesweeper
 
 import android.util.DisplayMetrics
 import android.util.Log
-import androidx.compose.foundation.Border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Box
 import androidx.compose.foundation.ContentGravity
 import androidx.compose.foundation.Image
@@ -28,8 +28,8 @@ import androidx.compose.material.Surface
 import androidx.compose.material.TextButton
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.state
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.gesture.longPressGestureFilter
@@ -66,7 +66,7 @@ object MineUi {
     private fun imageDrawable(
         image: ImageAsset,
         width: Dp = BLOCK_SIZE.dp,
-        height: Dp = BLOCK_SIZE.dp
+        height: Dp = BLOCK_SIZE.dp,
     ) {
         Image(image, modifier = Modifier.size(width, height), contentScale = ContentScale.Fit)
     }
@@ -75,7 +75,7 @@ object MineUi {
     fun mainUi(
         rows: Int,
         column: Int,
-        onNewGameCreated: ((model: MineModel) -> Unit)? = null
+        onNewGameCreated: ((model: MineModel) -> Unit)? = null,
     ) {
         val model = remember { MineModel(rows, column) }
 
@@ -88,7 +88,7 @@ object MineUi {
             mines = model.mines.value,
             loading = model.loading.value,
             onNewGameCreated = onNewGameCreated,
-            model = model
+            model = model,
         )
     }
 
@@ -103,13 +103,13 @@ object MineUi {
         mines: Int = 10,
         loading: Boolean = false,
         model: MineModel? = null,
-        onNewGameCreated: ((model: MineModel) -> Unit)? = null
+        onNewGameCreated: ((model: MineModel) -> Unit)? = null,
     ) {
         MaterialTheme(
             colors = lightColors(
                 primary = colorResource(R.color.colorPrimary),
                 primaryVariant = colorResource(R.color.colorPrimaryDark),
-                secondary = colorResource(R.color.colorAccent)
+                secondary = colorResource(R.color.colorAccent),
             )
         ) {
             Column(
@@ -123,7 +123,7 @@ object MineUi {
                         paddingStart = 8.dp,
                         paddingEnd = 8.dp,
                         paddingBottom = 24.dp,
-                        gravity = ContentGravity.TopCenter
+                        gravity = ContentGravity.TopCenter,
                     ) {
                         if (loading) {
                             CircularProgressIndicator()
@@ -141,7 +141,7 @@ object MineUi {
                             column = column,
                             mine = mines,
                             showConfig = showConfig,
-                            onNewGameCreated = onNewGameCreated
+                            onNewGameCreated = onNewGameCreated,
                         )
                     }
                 }
@@ -152,7 +152,7 @@ object MineUi {
     @Composable
     private fun headerWidget(
         model: MineModel?,
-        onNewGameCreated: ((model: MineModel) -> Unit)? = null
+        onNewGameCreated: ((model: MineModel) -> Unit)? = null,
     ) {
         Row(Modifier.padding(32.dp), verticalGravity = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) {
@@ -180,7 +180,7 @@ object MineUi {
                 style = TextStyle(
                     color = Color.Red,
                     fontSize = 24.sp,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
                 )
             )
         }
@@ -206,7 +206,7 @@ object MineUi {
                 style = TextStyle(
                     color = Color.Red,
                     fontSize = 24.sp,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
                 )
             )
         }
@@ -237,7 +237,7 @@ object MineUi {
         row: Int = 0,
         column: Int = 0,
         blockState: MineModel.BlockState = MineModel.BlockState.None,
-        debug: Boolean? = null
+        debug: Boolean? = null,
     ) {
         when (blockState) {
             MineModel.BlockState.Marked ->
@@ -253,7 +253,7 @@ object MineUi {
                     model = model,
                     row = row,
                     column = column,
-                    debug = debug ?: model?.funny?.value ?: false
+                    debug = debug ?: model?.funny?.value ?: false,
                 )
         }
     }
@@ -263,7 +263,7 @@ object MineUi {
         model: MineModel? = null,
         row: Int,
         column: Int,
-        debug: Boolean = BuildConfig.DEBUG
+        debug: Boolean = BuildConfig.DEBUG,
     ) {
         Box(modifier = Modifier.clickable(onClick = {
             if (model?.running == true) {
@@ -308,8 +308,8 @@ object MineUi {
         val drawable = if (clicked) R.drawable.mine_clicked else R.drawable.mine_noclick
         Box(
             modifier = Modifier.size(BLOCK_SIZE.dp),
-            border = Border(1.dp, color = Color.White),
-            backgroundColor = Color.LightGray
+            border = BorderStroke(1.dp, color = Color.White),
+            backgroundColor = Color.LightGray,
         ) {
             imageDrawable(image = imageResource(drawable))
         }
@@ -324,7 +324,7 @@ object MineUi {
             Box(modifier = Modifier.size(BLOCK_SIZE.dp), gravity = ContentGravity.Center) {
                 Text(
                     if (value < 0) "*" else "$value",
-                    style = TextStyle(color = Color.Gray)
+                    style = TextStyle(color = Color.Gray),
                 )
             }
         } else {
@@ -349,14 +349,14 @@ object MineUi {
         Box(
             modifier = Modifier.size(BLOCK_SIZE.dp),
             gravity = ContentGravity.Center,
-            border = Border(1.dp, color = Color.White),
-            backgroundColor = Color.LightGray
+            border = BorderStroke(1.dp, color = Color.White),
+            backgroundColor = Color.LightGray,
         ) {
             Text(
                 text = "$value",
                 style = TextStyle(
                     color = getTextBlockColor(value),
-                    fontWeight = if (value > 0) FontWeight.Bold else FontWeight.Normal
+                    fontWeight = if (value > 0) FontWeight.Bold else FontWeight.Normal,
                 )
             )
         }
@@ -372,12 +372,12 @@ object MineUi {
         column: Int = 5,
         mine: Int = 10,
         showConfig: Boolean = false,
-        onNewGameCreated: ((model: MineModel) -> Unit)? = null
+        onNewGameCreated: ((model: MineModel) -> Unit)? = null,
     ) {
-        val visible = state { showConfig }
-        val rows = state { row }
-        val columns = state { column }
-        val mines = state { mine }
+        val visible = remember { mutableStateOf(showConfig) }
+        val rows = remember { mutableStateOf(row) }
+        val columns = remember { mutableStateOf(column) }
+        val mines = remember { mutableStateOf(mine) }
 
         val buttonText = stringResource(
             if (visible.value) R.string.action_hide else R.string.action_config
@@ -401,7 +401,7 @@ object MineUi {
             color = if (visible.value) Color.White else Color.Transparent,
             elevation = if (visible.value) 8.dp else 0.dp,
             // border = Border(Color.LightGray, 1.dp),
-            shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp)
+            shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp),
         ) {
             Box(padding = 16.dp) {
                 Column(verticalArrangement = Arrangement.SpaceAround) {
@@ -411,20 +411,23 @@ object MineUi {
                             initial = row,
                             start = 5,
                             end = maxRows,
-                            onValueChanged = { rows.value = it })
+                            onValueChanged = { rows.value = it },
+                        )
                         textSlider(
                             title = stringResource(R.string.config_column),
                             initial = column,
                             start = 4,
                             end = maxCols,
-                            onValueChanged = { columns.value = it })
+                            onValueChanged = { columns.value = it },
+                        )
                         textSlider(
                             title = stringResource(R.string.config_mine),
                             initial = mine,
                             start = 5,
                             end = maxMines,
                             step = 5,
-                            onValueChanged = { mines.value = it })
+                            onValueChanged = { mines.value = it },
+                        )
                     } else {
                         Box(modifier = Modifier.height(1.dp)) {
                             // Text("...") // make the pane to match_parent width
@@ -457,9 +460,9 @@ object MineUi {
         end: Int = 100,
         step: Int = 1,
         initial: Int = 0,
-        onValueChanged: ((value: Int) -> Unit)? = null
+        onValueChanged: ((value: Int) -> Unit)? = null,
     ) {
-        val position = state { initial.toFloat() }
+        val position = remember { mutableStateOf(initial.toFloat()) }
 
         Row(verticalGravity = Alignment.CenterVertically) {
             if (title.isNotEmpty()) {
@@ -475,14 +478,15 @@ object MineUi {
                     value = position.value,
                     steps = (end - start - step) / step,
                     valueRange = start.toFloat()..end.toFloat(),
-                    color = MaterialTheme.colors.secondary,
+                    thumbColor = MaterialTheme.colors.primaryVariant,
                     onValueChange = { pos ->
-                        Log.d(TAG, "end value: $pos")
+                        // Log.d(TAG, "end value: $pos")
                         position.value = pos
                     },
                     onValueChangeEnd = {
                         if (onValueChanged != null) onValueChanged(position.value.toInt())
-                    })
+                    },
+                )
             }
             Box(modifier = Modifier.width(36.dp)) {
                 Text("$end", style = TextStyle(color = Color.Gray))
@@ -502,7 +506,7 @@ private fun defaultPreview() {
         column = 5,
         mines = 15,
         showConfig = true,
-        loading = false
+        loading = false,
     )
 }
 
