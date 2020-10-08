@@ -3,15 +3,15 @@ package dolphin.android.apps.minesweeper
 import android.util.DisplayMetrics
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Box
-import androidx.compose.foundation.ContentGravity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Stack
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -114,16 +114,13 @@ object MineUi {
         ) {
             Column(
                 verticalArrangement = Arrangement.Center,
-                horizontalGravity = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 headerWidget(model = model, onNewGameCreated = onNewGameCreated)
-                Stack(modifier = Modifier.fillMaxHeight()) {
+                Box(modifier = Modifier.fillMaxHeight()) {
                     Box(
-                        Modifier.fillMaxSize(),
-                        paddingStart = 8.dp,
-                        paddingEnd = 8.dp,
-                        paddingBottom = 24.dp,
-                        gravity = ContentGravity.TopCenter,
+                        Modifier.fillMaxSize().padding(start = 8.dp, end = 8.dp, bottom = 24.dp),
+                        alignment = Alignment.TopCenter,
                     ) {
                         if (loading) {
                             CircularProgressIndicator()
@@ -131,7 +128,7 @@ object MineUi {
                             mineField(model = model, row = row, column = column)
                         }
                     }
-                    Box(modifier = Modifier.gravity(align = Alignment.BottomCenter)) {
+                    Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                         configPane(
                             model = model,
                             maxRows = maxRows,
@@ -154,7 +151,7 @@ object MineUi {
         model: MineModel?,
         onNewGameCreated: ((model: MineModel) -> Unit)? = null,
     ) {
-        Row(Modifier.padding(32.dp), verticalGravity = Alignment.CenterVertically) {
+        Row(Modifier.padding(32.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) {
                 mineCountWidget(model = model)
             }
@@ -174,7 +171,7 @@ object MineUi {
 
     @Composable
     private fun mineCountWidget(model: MineModel?) {
-        Box(modifier = Modifier.width(120.dp), paddingStart = 32.dp, paddingEnd = 32.dp) {
+        Box(modifier = Modifier.width(120.dp).padding(horizontal = 32.dp)) {
             Text(
                 String.format("%03d", model?.remainingMines?.value ?: 0),
                 style = TextStyle(
@@ -200,7 +197,7 @@ object MineUi {
 
     @Composable
     private fun playClockWidget(model: MineModel?) {
-        Box(modifier = Modifier.width(120.dp), paddingStart = 16.dp, paddingEnd = 8.dp) {
+        Box(modifier = Modifier.width(120.dp).padding(start = 16.dp, end = 8.dp)) {
             Text(
                 String.format("%05d", model?.clock?.value ?: 0),
                 style = TextStyle(
@@ -282,7 +279,7 @@ object MineUi {
                 Log.w(TAG, "current game state: ${model?.gameState?.value}")
             }
         }.size(BLOCK_SIZE.dp, BLOCK_SIZE.dp)) {
-            Stack {
+            Box {
                 Box { imageDrawable(image = imageResource(R.drawable.box)) }
                 if (debug) Box { textBlock(model, row, column, debug = debug) }
             }
@@ -307,9 +304,8 @@ object MineUi {
     private fun mineBlock(clicked: Boolean = false) {
         val drawable = if (clicked) R.drawable.mine_clicked else R.drawable.mine_noclick
         Box(
-            modifier = Modifier.size(BLOCK_SIZE.dp),
-            border = BorderStroke(1.dp, color = Color.White),
-            backgroundColor = Color.LightGray,
+            modifier = Modifier.size(BLOCK_SIZE.dp).border(BorderStroke(1.dp, color = Color.White))
+                .background(Color.LightGray),
         ) {
             imageDrawable(image = imageResource(drawable))
         }
@@ -321,7 +317,7 @@ object MineUi {
         val value = model?.getMineIndicator(row, column) ?: 0
         if (debug) {
             // TextBlock(value = value, defaultColor = Color.Gray)
-            Box(modifier = Modifier.size(BLOCK_SIZE.dp), gravity = ContentGravity.Center) {
+            Box(modifier = Modifier.size(BLOCK_SIZE.dp), alignment = Alignment.Center) {
                 Text(
                     if (value < 0) "*" else "$value",
                     style = TextStyle(color = Color.Gray),
@@ -347,10 +343,9 @@ object MineUi {
     @Composable
     internal fun textBlock(value: Int) {
         Box(
-            modifier = Modifier.size(BLOCK_SIZE.dp),
-            gravity = ContentGravity.Center,
-            border = BorderStroke(1.dp, color = Color.White),
-            backgroundColor = Color.LightGray,
+            modifier = Modifier.size(BLOCK_SIZE.dp).border(BorderStroke(1.dp, color = Color.White))
+                .background(Color.LightGray),
+            alignment = Alignment.Center,
         ) {
             Text(
                 text = "$value",
@@ -403,7 +398,7 @@ object MineUi {
             // border = Border(Color.LightGray, 1.dp),
             shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp),
         ) {
-            Box(padding = 16.dp) {
+            Box(modifier = Modifier.padding(16.dp)) {
                 Column(verticalArrangement = Arrangement.SpaceAround) {
                     if (visible.value) {
                         textSlider(
@@ -433,7 +428,7 @@ object MineUi {
                             // Text("...") // make the pane to match_parent width
                         }
                     }
-                    Box(modifier = Modifier.fillMaxWidth(), paddingTop = 8.dp) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                         Row(horizontalArrangement = Arrangement.Start) {
                             TextButton(onClick = { restoreConfig() }) {
                                 Text(buttonText)
@@ -464,7 +459,7 @@ object MineUi {
     ) {
         val position = remember { mutableStateOf(initial.toFloat()) }
 
-        Row(verticalGravity = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             if (title.isNotEmpty()) {
                 Box(modifier = Modifier.width(64.dp)) {
                     Text(title, overflow = TextOverflow.Clip)
@@ -495,7 +490,7 @@ object MineUi {
     }
 }
 
-@Preview(name = "Default layout")
+@Preview(name = "Default layout", showDecoration = true)
 @Composable
 private fun defaultPreview() {
     MineUi.contentViewWidget(

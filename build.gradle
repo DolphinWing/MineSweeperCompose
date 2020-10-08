@@ -1,11 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.4.0'
+    ext.kotlin_version = '1.4.10'
 
-    def compose_release_version = "dev17"
-    ext.compose_version = "0.1.0-$compose_release_version"
-    ext.compose_compiler_extension_version = "0.1.0-$compose_release_version"
+    def compose_release_version = "alpha04"
+    ext.compose_version = "1.0.0-$compose_release_version"
+    ext.compose_compiler_extension_version = "1.0.0-$compose_release_version"
 
     repositories {
         google()
@@ -13,7 +13,7 @@ buildscript {
         // maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.0-alpha07'
+        classpath 'com.android.tools.build:gradle:4.2.0-alpha13'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
