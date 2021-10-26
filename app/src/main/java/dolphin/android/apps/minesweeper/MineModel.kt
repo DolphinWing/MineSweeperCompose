@@ -8,39 +8,86 @@ import android.util.SparseIntArray
 import androidx.compose.runtime.mutableStateOf
 import kotlin.random.Random
 
-class MineModel(val maxRows: Int, val maxCols: Int) {
+/**
+ * data model for app
+ *
+ * @param maxRows max rows of the map, depending on screen size
+ * @param maxCols max columns of the map, depending on screen size
+ * @param maxMines max mines in the map
+ */
+class MineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMines: Int = 10) {
     companion object {
         private const val TAG = "MineModel"
         private const val MINED = -99
     }
 
+    /**
+     * Current game state
+     */
     var gameState = mutableStateOf(GameState.Start)
+
+    /**
+     * Play clock
+     */
     var clock = mutableStateOf(0L)
-    var row = mutableStateOf(6)
-    var column = mutableStateOf(5)
-    var mines = mutableStateOf(10)
+
+    /**
+     * Current rows of the map
+     */
+    var row = mutableStateOf(maxRows)
+
+    /**
+     * Current column of the map
+     */
+    var column = mutableStateOf(maxCols)
+
+    /**
+     * Current mines of the map
+     */
+    var mines = mutableStateOf(maxMines)
+
+    /**
+     * A flag indicates if the app is loading or not
+     */
     var loading = mutableStateOf(false)
+
+    /**
+     * You can call it a debug mode or god mode.
+     */
     var funny = mutableStateOf(BuildConfig.DEBUG) /* a funny mode for YA */
 
+    /**
+     * Current marked blocks as mines
+     */
     var markedMines = 0
         set(value) {
             remainingMines.value = mines.value - value
             field = value
         }
 
+    /**
+     * Remember how many mines we have not found
+     */
     var remainingMines = mutableStateOf(0)
 
     private val mineMap = SparseIntArray()
 
     private val mapSize: Int
         get() = this.row.value * this.column.value
+
+    /**
+     * block individual state
+     */
     var blockState = Array(mapSize) { mutableStateOf(BlockState.None) }
         private set
 
     private var firstClick: Boolean = false
 
+    /**
+     * Game state
+     */
     enum class GameState {
-        Start, Running, Exploded, Cleared, Review, Destroyed
+        Start, Running, Exploded, Cleared, Review, // Destroyed
     }
 
     /**
@@ -57,6 +104,13 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
         generateMineMap()
     }
 
+    /**
+     * Create a new mine map.
+     *
+     * @param row target rows of the map
+     * @param column target columns of the map
+     * @param mines target mines of the map
+     */
     fun generateMineMap(
         row: Int = this.row.value,
         column: Int = this.column.value,
@@ -119,6 +173,13 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
         }
     }
 
+    /**
+     * Convert block coordinates to array index.
+     *
+     * @param row row index of the block
+     * @param column column index of the block
+     * @return array index
+     */
     fun toIndex(row: Int, column: Int) = row * this.column.value + column
 
     private fun mineExists(index: Int): Boolean = if (index in 0 until mapSize)
@@ -126,6 +187,12 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
 
     private fun mineExists(row: Int, column: Int) = mineExists(toIndex(row, column))
 
+    /**
+     * Get block state
+     *
+     * @param row row index of the block
+     * @param column column index of the block
+     */
     fun getMineIndicator(row: Int, column: Int): Int {
         // Log.d(TAG, "==> ${toIndex(row, column)} ${mineMap[toIndex(row, column)]}")
         return mineMap[toIndex(row, column)]
@@ -147,6 +214,13 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
     private fun toSouthIndex(index: Int): Int = index + this.column.value
     private fun toSouthEastIndex(index: Int): Int = toEastIndex(toSouthIndex(index))
 
+    /**
+     * Change block state
+     *
+     * @param row row index of the block
+     * @param column column index of the block
+     * @param state new block state
+     */
     fun changeState(row: Int, column: Int, state: BlockState) {
         // loading = false
         blockState[toIndex(row, column)].value = state
@@ -158,8 +232,12 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
         else -> false
     }
 
+    /**
+     * Mark a block as a mine
+     */
     fun markAsMine(row: Int, column: Int): GameState {
         if (gameState.value == GameState.Review) return GameState.Review
+        firstClick = false // treat it as game started
         changeState(row, column, BlockState.Marked)
         markedMines++
         gameState.value = if (verifyMineClear()) GameState.Cleared else GameState.Running
@@ -200,6 +278,13 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
         }
     }
 
+    /**
+     * Click on a block
+     *
+     * @param row row index of the block
+     * @param column column index of the block
+     * @return game state after step on the block
+     */
     fun stepOn(row: Int, column: Int): GameState {
         if (gameState.value == GameState.Review) return GameState.Review
         gameState.value = if (mineExists(row, column)) {
@@ -235,6 +320,11 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
         return gameState.value
     }
 
+    /**
+     * Internal step on action.
+     *
+     * @param index array index
+     */
     private fun stepOn0(index: Int) {
         if (isBlockNotOpen(index)) {
             blockState[index].value = BlockState.Text
@@ -244,6 +334,11 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
         }
     }
 
+    /**
+     * Internal block auto click action
+     *
+     * @param index array index
+     */
     private fun autoClick0(index: Int) {
         if (notFirstRow(index) && notFirstColumn(index)) stepOn0(toNorthWestIndex(index))
         if (notFirstRow(index)) stepOn0(toNorthIndex(index))
@@ -259,6 +354,11 @@ class MineModel(val maxRows: Int, val maxCols: Int) {
     private val soFunny: Boolean
         get() = row.value == 5 && column.value == 4 && mines.value == 5
 
+    /**
+     * Check if we are about to start funny mode or not
+     *
+     * @return true if funny mode is started
+     */
     fun onTheWayToFunnyMode(): Boolean {
         if (soFunny && ++funnyCount == 10) {
             Log.w(TAG, "enable YA mode!")

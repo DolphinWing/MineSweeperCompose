@@ -3,11 +3,12 @@ package dolphin.android.apps.minesweeper
 import android.util.DisplayMetrics
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Text
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +26,9 @@ import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Slider
+import androidx.compose.material.SliderDefaults
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
@@ -32,27 +36,36 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.gesture.longPressGestureFilter
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageAsset
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.ui.tooling.preview.Preview
 
+/**
+ * Main UI implementations
+ */
+@ExperimentalFoundationApi
 object MineUi {
     private const val TAG = "MineUi"
     private const val BLOCK_SIZE = 48
     private const val SMILEY_SIZE = 64
 
+    /**
+     * Calculate max rows/columns for current screen size
+     *
+     * @return a pair of maximum (row, column)
+     */
     fun calculateScreenSize(displayMetrics: DisplayMetrics): Pair<Int, Int> {
         val height: Float = displayMetrics.heightPixels / displayMetrics.density
         val width: Float = displayMetrics.widthPixels / displayMetrics.density
@@ -63,23 +76,31 @@ object MineUi {
     }
 
     @Composable
-    private fun imageDrawable(
-        image: ImageAsset,
+    private fun BlockImageDrawable(
+        image: Painter,
         width: Dp = BLOCK_SIZE.dp,
         height: Dp = BLOCK_SIZE.dp,
     ) {
-        Image(image, modifier = Modifier.size(width, height), contentScale = ContentScale.Fit)
+        Image(
+            image,
+            modifier = Modifier.size(width, height),
+            contentScale = ContentScale.Fit,
+            contentDescription = null,
+        )
     }
 
+    /**
+     * Main UI
+     */
     @Composable
-    fun mainUi(
+    fun MainUi(
         rows: Int,
         column: Int,
         onNewGameCreated: ((model: MineModel) -> Unit)? = null,
     ) {
         val model = remember { MineModel(rows, column) }
 
-        contentViewWidget(
+        ContentViewWidget(
             maxRows = model.maxRows,
             maxCols = model.maxCols,
             maxMines = 40,
@@ -92,8 +113,11 @@ object MineUi {
         )
     }
 
+    /**
+     * Real content of Main UI
+     */
     @Composable
-    fun contentViewWidget(
+    fun ContentViewWidget(
         maxRows: Int = 12,
         maxCols: Int = 8,
         maxMines: Int = 40,
@@ -116,20 +140,22 @@ object MineUi {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                headerWidget(model = model, onNewGameCreated = onNewGameCreated)
+                HeaderWidget(model = model, onNewGameCreated = onNewGameCreated)
                 Box(modifier = Modifier.fillMaxHeight()) {
                     Box(
-                        Modifier.fillMaxSize().padding(start = 8.dp, end = 8.dp, bottom = 24.dp),
-                        alignment = Alignment.TopCenter,
+                        Modifier
+                            .fillMaxSize()
+                            .padding(start = 8.dp, end = 8.dp, bottom = 24.dp),
+                        contentAlignment = Alignment.TopCenter,
                     ) {
                         if (loading) {
                             CircularProgressIndicator()
                         } else {
-                            mineField(model = model, row = row, column = column)
+                            MineField(model = model, row = row, column = column)
                         }
                     }
                     Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                        configPane(
+                        ConfigPane(
                             model = model,
                             maxRows = maxRows,
                             maxCols = maxCols,
@@ -147,13 +173,13 @@ object MineUi {
     }
 
     @Composable
-    private fun headerWidget(
+    private fun HeaderWidget(
         model: MineModel?,
         onNewGameCreated: ((model: MineModel) -> Unit)? = null,
     ) {
         Row(Modifier.padding(32.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) {
-                mineCountWidget(model = model)
+                MineCountWidget(model = model)
             }
             Box(modifier = Modifier.clickable(onClick = {
                 model?.let { that ->
@@ -161,17 +187,21 @@ object MineUi {
                     onNewGameCreated?.invoke(model)
                 } // ?: kotlin.run { Log.e(TAG, "no model... HOW???") }
             })) {
-                smileyIcon(model?.gameState?.value ?: MineModel.GameState.Start)
+                SmileyIcon(model?.gameState?.value ?: MineModel.GameState.Start)
             }
             Box(Modifier.weight(1f)) {
-                playClockWidget(model = model)
+                PlayClockWidget(model = model)
             }
         }
     }
 
     @Composable
-    private fun mineCountWidget(model: MineModel?) {
-        Box(modifier = Modifier.width(120.dp).padding(horizontal = 32.dp)) {
+    private fun MineCountWidget(model: MineModel?) {
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .padding(horizontal = 32.dp)
+        ) {
             Text(
                 String.format("%03d", model?.remainingMines?.value ?: 0),
                 style = TextStyle(
@@ -184,20 +214,24 @@ object MineUi {
     }
 
     @Composable
-    private fun smileyIcon(state: MineModel.GameState) {
-        val image = imageResource(
+    private fun SmileyIcon(state: MineModel.GameState) {
+        val image = painterResource(
             when (state) {
                 MineModel.GameState.Exploded, MineModel.GameState.Review -> R.drawable.face_cry
                 MineModel.GameState.Cleared -> R.drawable.face_win
                 else -> R.drawable.face_smile
             }
         )
-        imageDrawable(image, SMILEY_SIZE.dp, SMILEY_SIZE.dp)
+        BlockImageDrawable(image, SMILEY_SIZE.dp, SMILEY_SIZE.dp)
     }
 
     @Composable
-    private fun playClockWidget(model: MineModel?) {
-        Box(modifier = Modifier.width(120.dp).padding(start = 16.dp, end = 8.dp)) {
+    private fun PlayClockWidget(model: MineModel?) {
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .padding(start = 16.dp, end = 8.dp)
+        ) {
             Text(
                 String.format("%05d", model?.clock?.value ?: 0),
                 style = TextStyle(
@@ -210,12 +244,12 @@ object MineUi {
     }
 
     @Composable
-    private fun mineField(model: MineModel?, row: Int, column: Int) {
+    private fun MineField(model: MineModel?, row: Int, column: Int) {
         Column {
             repeat(row) { r ->
                 Row {
                     repeat(column) { c ->
-                        blockButton(
+                        BlockButton(
                             model = model,
                             row = r,
                             column = c,
@@ -228,8 +262,11 @@ object MineUi {
         }
     }
 
+    /**
+     * A block button in the mine field.
+     */
     @Composable
-    fun blockButton(
+    fun BlockButton(
         model: MineModel? = null,
         row: Int = 0,
         column: Int = 0,
@@ -238,15 +275,15 @@ object MineUi {
     ) {
         when (blockState) {
             MineModel.BlockState.Marked ->
-                markedBlock(model, row, column)
+                MarkedBlock(model, row, column)
             MineModel.BlockState.Mined ->
-                mineBlock(clicked = true)
+                MineBlock(clicked = true)
             MineModel.BlockState.Hidden ->
-                mineBlock(clicked = false)
+                MineBlock(clicked = false)
             MineModel.BlockState.Text ->
-                textBlock(model, row, column, debug = debug ?: false)
+                TextBlock(model, row, column, debug = debug ?: false)
             else ->
-                baseBlock(
+                BaseBlock(
                     model = model,
                     row = row,
                     column = column,
@@ -256,75 +293,89 @@ object MineUi {
     }
 
     @Composable
-    private fun baseBlock(
+    private fun BaseBlock(
         model: MineModel? = null,
         row: Int,
         column: Int,
         debug: Boolean = BuildConfig.DEBUG,
     ) {
-        Box(modifier = Modifier.clickable(onClick = {
-            if (model?.running == true) {
-                model.stepOn(row, column)
-            } else {
-                Log.w(TAG, "current game state: ${model?.gameState?.value}")
-            }
-        }).longPressGestureFilter {
-            if (model?.running == true) {
-                if (model.markedMines <= model.mines.value) {
-                    model.markAsMine(row, column)
-                } else {
-                    Log.e(TAG, "too many mines!!!")
-                }
-            } else {
-                Log.w(TAG, "current game state: ${model?.gameState?.value}")
-            }
-        }.size(BLOCK_SIZE.dp, BLOCK_SIZE.dp)) {
+        Box(
+            modifier = Modifier
+                .size(BLOCK_SIZE.dp, BLOCK_SIZE.dp)
+                .combinedClickable(
+                    onClick = {
+                        if (model?.running == true) {
+                            model.stepOn(row, column)
+                        } else {
+                            Log.w(TAG, "current game state: ${model?.gameState?.value}")
+                        }
+                    },
+                    onLongClick = {
+                        if (model?.running == true) {
+                            if (model.markedMines <= model.mines.value) {
+                                model.markAsMine(row, column)
+                            } else {
+                                Log.e(TAG, "too many mines!!!")
+                            }
+                        } else {
+                            Log.w(TAG, "current game state: ${model?.gameState?.value}")
+                        }
+                    },
+                ),
+        ) {
             Box {
-                Box { imageDrawable(image = imageResource(R.drawable.box)) }
-                if (debug) Box { textBlock(model, row, column, debug = debug) }
+                Box { BlockImageDrawable(image = painterResource(R.drawable.box)) }
+                if (debug) Box { TextBlock(model, row, column, debug = debug) }
             }
         }
     }
 
     @Composable
-    private fun markedBlock(model: MineModel? = null, row: Int, column: Int) {
-        Box(modifier = Modifier.size(BLOCK_SIZE.dp).longPressGestureFilter {
-            if (model?.running == true) {
-                model.changeState(row, column, MineModel.BlockState.None)
-                --model.markedMines
-            } else {
-                Log.w(TAG, "not running")
-            }
-        }) {
-            imageDrawable(image = imageResource(R.drawable.mine_marked))
+    private fun MarkedBlock(model: MineModel? = null, row: Int, column: Int) {
+        Box(modifier = Modifier
+            .size(BLOCK_SIZE.dp)
+            .combinedClickable(
+                onClick = { },
+                onLongClick = {
+                    if (model?.running == true) {
+                        model.changeState(row, column, MineModel.BlockState.None)
+                        --model.markedMines
+                    } else {
+                        Log.w(TAG, "not running")
+                    }
+                }
+            )) {
+            BlockImageDrawable(image = painterResource(R.drawable.mine_marked))
         }
     }
 
     @Composable
-    private fun mineBlock(clicked: Boolean = false) {
+    private fun MineBlock(clicked: Boolean = false) {
         val drawable = if (clicked) R.drawable.mine_clicked else R.drawable.mine_noclick
         Box(
-            modifier = Modifier.size(BLOCK_SIZE.dp).border(BorderStroke(1.dp, color = Color.White))
+            modifier = Modifier
+                .size(BLOCK_SIZE.dp)
+                .border(BorderStroke(1.dp, color = Color.White))
                 .background(Color.LightGray),
         ) {
-            imageDrawable(image = imageResource(drawable))
+            BlockImageDrawable(image = painterResource(drawable))
         }
     }
 
     @Composable
-    private fun textBlock(model: MineModel?, row: Int, column: Int, debug: Boolean = false) {
+    private fun TextBlock(model: MineModel?, row: Int, column: Int, debug: Boolean = false) {
         // Log.d(TAG, "textBlock: $row $column $debug")
         val value = model?.getMineIndicator(row, column) ?: 0
         if (debug) {
             // TextBlock(value = value, defaultColor = Color.Gray)
-            Box(modifier = Modifier.size(BLOCK_SIZE.dp), alignment = Alignment.Center) {
+            Box(modifier = Modifier.size(BLOCK_SIZE.dp), contentAlignment = Alignment.Center) {
                 Text(
                     if (value < 0) "*" else "$value",
                     style = TextStyle(color = Color.Gray),
                 )
             }
         } else {
-            textBlock(value = value)
+            TextBlock(value = value)
         }
     }
 
@@ -341,11 +392,13 @@ object MineUi {
     }
 
     @Composable
-    internal fun textBlock(value: Int) {
+    fun TextBlock(value: Int) {
         Box(
-            modifier = Modifier.size(BLOCK_SIZE.dp).border(BorderStroke(1.dp, color = Color.White))
+            modifier = Modifier
+                .size(BLOCK_SIZE.dp)
+                .border(BorderStroke(1.dp, color = Color.White))
                 .background(Color.LightGray),
-            alignment = Alignment.Center,
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "$value",
@@ -358,7 +411,7 @@ object MineUi {
     }
 
     @Composable
-    private fun configPane(
+    private fun ConfigPane(
         model: MineModel?,
         maxRows: Int = 12,
         maxCols: Int = 8,
@@ -396,26 +449,26 @@ object MineUi {
             color = if (visible.value) Color.White else Color.Transparent,
             elevation = if (visible.value) 8.dp else 0.dp,
             // border = Border(Color.LightGray, 1.dp),
-            shape = RoundedCornerShape(topRight = 16.dp, topLeft = 16.dp),
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         ) {
             Box(modifier = Modifier.padding(16.dp)) {
                 Column(verticalArrangement = Arrangement.SpaceAround) {
                     if (visible.value) {
-                        textSlider(
+                        TextedSlider(
                             title = stringResource(R.string.config_row),
                             initial = row,
                             start = 5,
                             end = maxRows,
                             onValueChanged = { rows.value = it },
                         )
-                        textSlider(
+                        TextedSlider(
                             title = stringResource(R.string.config_column),
                             initial = column,
                             start = 4,
                             end = maxCols,
                             onValueChanged = { columns.value = it },
                         )
-                        textSlider(
+                        TextedSlider(
                             title = stringResource(R.string.config_mine),
                             initial = mine,
                             start = 5,
@@ -428,7 +481,11 @@ object MineUi {
                             // Text("...") // make the pane to match_parent width
                         }
                     }
-                    Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    ) {
                         Row(horizontalArrangement = Arrangement.Start) {
                             TextButton(onClick = { restoreConfig() }) {
                                 Text(buttonText)
@@ -449,7 +506,7 @@ object MineUi {
     }
 
     @Composable
-    private fun textSlider(
+    private fun TextedSlider(
         title: String = "",
         start: Int = 0,
         end: Int = 100,
@@ -461,39 +518,51 @@ object MineUi {
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (title.isNotEmpty()) {
-                Box(modifier = Modifier.width(64.dp)) {
-                    Text(title, overflow = TextOverflow.Clip)
-                }
-            }
-            Box(modifier = Modifier.width(24.dp)) {
-                Text("$start", style = TextStyle(color = Color.Gray))
-            }
-            Box(modifier = Modifier.weight(1f)) {
-                Slider(
-                    value = position.value,
-                    steps = (end - start - step) / step,
-                    valueRange = start.toFloat()..end.toFloat(),
-                    thumbColor = MaterialTheme.colors.primaryVariant,
-                    onValueChange = { pos ->
-                        // Log.d(TAG, "end value: $pos")
-                        position.value = pos
-                    },
-                    onValueChangeEnd = {
-                        if (onValueChanged != null) onValueChanged(position.value.toInt())
-                    },
+                Text(
+                    title,
+                    modifier = Modifier.requiredWidth(64.dp),
+                    style = MaterialTheme.typography.subtitle2,
+                    overflow = TextOverflow.Clip,
+                    textAlign = TextAlign.Center,
                 )
             }
-            Box(modifier = Modifier.width(36.dp)) {
-                Text("$end", style = TextStyle(color = Color.Gray))
-            }
+            Text(
+                "$start",
+                modifier = Modifier.requiredWidth(24.dp),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.body2,
+            )
+            Slider(
+                value = position.value,
+                steps = (end - start - step) / step,
+                valueRange = start.toFloat()..end.toFloat(),
+                onValueChange = { pos ->
+                    // Log.d(TAG, "end value: $pos")
+                    position.value = pos
+                },
+                onValueChangeFinished = {
+                    onValueChanged?.invoke(position.value.toInt())
+                },
+                modifier = Modifier.weight(1f),
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colors.primaryVariant,
+                ),
+            )
+            Text(
+                "$end",
+                modifier = Modifier.requiredWidth(36.dp),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.body2,
+            )
         }
     }
 }
 
-@Preview(name = "Default layout", showDecoration = true)
+@ExperimentalFoundationApi
+@Preview(name = "Default layout", showSystemUi = true)
 @Composable
-private fun defaultPreview() {
-    MineUi.contentViewWidget(
+private fun PreviewMainUi() {
+    MineUi.ContentViewWidget(
         maxCols = 10,
         maxRows = 10,
         maxMines = 20,
@@ -505,22 +574,23 @@ private fun defaultPreview() {
     )
 }
 
+@ExperimentalFoundationApi
 @Preview(name = "Mine block preview")
 @Composable
-private fun previewBlocks() {
+private fun PreviewBlocks() {
     MaterialTheme {
         Column {
             Row {
-                MineUi.blockButton(debug = true)
-                MineUi.blockButton(debug = false)
-                MineUi.blockButton(blockState = MineModel.BlockState.Marked)
-                MineUi.blockButton(blockState = MineModel.BlockState.Mined)
-                MineUi.blockButton(blockState = MineModel.BlockState.Hidden)
-                MineUi.blockButton(blockState = MineModel.BlockState.Text, debug = true)
-                MineUi.blockButton(blockState = MineModel.BlockState.Text, debug = false)
+                MineUi.BlockButton(debug = true)
+                MineUi.BlockButton(debug = false)
+                MineUi.BlockButton(blockState = MineModel.BlockState.Marked)
+                MineUi.BlockButton(blockState = MineModel.BlockState.Mined)
+                MineUi.BlockButton(blockState = MineModel.BlockState.Hidden)
+                MineUi.BlockButton(blockState = MineModel.BlockState.Text, debug = true)
+                MineUi.BlockButton(blockState = MineModel.BlockState.Text, debug = false)
             }
             Row {
-                repeat(8) { MineUi.textBlock(value = it) }
+                repeat(8) { MineUi.TextBlock(value = it) }
             }
         }
     }

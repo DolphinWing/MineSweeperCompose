@@ -1,7 +1,9 @@
 # MineSweeperAndroid
 
-Jetpack Compose version: 1.0.0-alpha04
+Jetpack Compose version: 1.0.4
 
-**Android Studio 4.2 Canary 13 or above required** (for Jetpack Compose)
+**Android Studio Arctic Fox or above required** (for Jetpack Compose)
 
 ![Android CI](https://github.com/DolphinWing/MineSweeperAndroid/workflows/Android%20CI/badge.svg)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

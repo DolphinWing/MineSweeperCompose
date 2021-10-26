@@ -3,15 +3,15 @@ apply plugin: 'kotlin-android'
 // apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion "30.0.2"
+    compileSdkVersion 31
+    buildToolsVersion "31.0.0"
 
     defaultConfig {
-        applicationId "dolphin.android.apps.minesweeper"
+        applicationId "dolphin.android.apps.minesweeper1"
         minSdkVersion 23
-        targetSdkVersion 30
-        versionCode 15
-        versionName "1.2.2"
+        targetSdkVersion 31
+        versionCode 20
+        versionName "1.3.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,7 +33,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerVersion "1.4.0"
+        // kotlinCompilerVersion "1.4.0"
         kotlinCompilerExtensionVersion "$compose_compiler_extension_version"
     }
 }
@@ -44,22 +44,23 @@ configurations {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation('androidx.activity:activity-ktx:1.1.0')
-    implementation 'androidx.core:core-ktx:1.3.1'
+    implementation 'androidx.appcompat:appcompat:1.3.1'
+    implementation('androidx.activity:activity-ktx:1.3.1')
+    implementation("androidx.activity:activity-compose:1.3.1")
+    implementation 'androidx.core:core-ktx:1.6.0'
 
     implementation("androidx.compose.runtime:runtime:$compose_version")
     implementation("androidx.compose.ui:ui:$compose_version")
-    implementation("androidx.compose.foundation:foundation-layout:$compose_version")
     implementation("androidx.compose.material:material:$compose_version")
     implementation("androidx.compose.foundation:foundation:$compose_version")
+    implementation("androidx.compose.foundation:foundation-layout:$compose_version")
     implementation("androidx.compose.animation:animation:$compose_version")
-    implementation "androidx.ui:ui-tooling:$compose_version"
+    implementation "androidx.compose.ui:ui-tooling:$compose_version"
 
-    testImplementation("junit:junit:4.13")
-    androidTestImplementation("junit:junit:4.13")
-    androidTestImplementation("androidx.test:rules:1.2.0")
-    androidTestImplementation("androidx.test:runner:1.2.0")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:rules:1.4.0")
+    androidTestImplementation("androidx.test:runner:1.4.0")
     // androidTestImplementation("androidx.compose.ui:ui:$compose_version")
     androidTestImplementation("androidx.ui:ui-test:$compose_version")
 

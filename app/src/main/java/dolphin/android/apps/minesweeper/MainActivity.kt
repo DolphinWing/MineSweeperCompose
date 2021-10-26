@@ -3,9 +3,11 @@ package dolphin.android.apps.minesweeper
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.platform.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 
+@ExperimentalFoundationApi
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MineActivity"
@@ -17,7 +19,7 @@ class MainActivity : AppCompatActivity() {
         val maxSize = MineUi.calculateScreenSize(resources.displayMetrics)
 
         setContent {
-            MineUi.mainUi(maxSize.first, maxSize.second) { model ->
+            MineUi.MainUi(maxSize.first, maxSize.second) { model ->
                 Log.d(TAG, "on new game created: ${model.row}x${model.column}")
                 if (model.funny.value) toastAboutFunnyModeEnabled()
             }
