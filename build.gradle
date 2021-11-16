@@ -3,7 +3,7 @@
 buildscript {
     ext.kotlin_version = '1.5.31'
 
-    def compose_release_version = "1.0.4"
+    def compose_release_version = "1.0.5"
     ext.compose_version = "$compose_release_version"
     ext.compose_compiler_extension_version = "$compose_release_version"
 

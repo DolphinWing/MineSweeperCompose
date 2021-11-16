@@ -1,6 +1,6 @@
 # MineSweeperAndroid
 
-Jetpack Compose version: 1.0.4
+Jetpack Compose version: 1.0.5
 
 **Android Studio Arctic Fox or above required** (for Jetpack Compose)
 

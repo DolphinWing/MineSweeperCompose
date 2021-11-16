@@ -1,11 +1,18 @@
 package dolphin.android.apps.minesweeper
 
+import android.os.Build
 import android.os.Bundle
+import android.os.CombinedVibration
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.core.os.BuildCompat
 
 @ExperimentalFoundationApi
 class MainActivity : AppCompatActivity() {
@@ -16,12 +23,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val maxSize = MineUi.calculateScreenSize(resources.displayMetrics)
+        val (maxRow, maxColumn) = MineUi.calculateScreenSize(resources.displayMetrics)
 
         setContent {
-            MineUi.MainUi(maxSize.first, maxSize.second) { model ->
+            MineUi.MainUi(maxRow, maxColumn, onVibrate = { whenVibrate() }) { model ->
                 Log.d(TAG, "on new game created: ${model.row}x${model.column}")
-                if (model.funny.value) toastAboutFunnyModeEnabled()
+                if (model.funny.value == true) toastAboutFunnyModeEnabled()
             }
         }
     }
@@ -35,5 +42,35 @@ class MainActivity : AppCompatActivity() {
             }
             toasted = true
         }
+    }
+
+    private fun whenVibrate() {
+        when {
+            BuildCompat.isAtLeastS() -> vibrateAtLeastS()
+            BuildCompat.isAtLeastO() -> vibrateAtLeastO()
+            else -> vibrateLegacy()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun vibrateAtLeastS() {
+        val vibrator = getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
+        vibrator.vibrate(CombinedVibration.createParallel(effect))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun vibrateAtLeastO() {
+        val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+        val effect = if (BuildCompat.isAtLeastQ()) {
+            VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
+        } else {
+            VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE)
+        }
+        vibrator.vibrate(effect)
+    }
+
+    private fun vibrateLegacy() {
+        (getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(50)
     }
 }
