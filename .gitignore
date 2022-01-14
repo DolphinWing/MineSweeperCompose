@@ -13,5 +13,5 @@
 .externalNativeBuild
 .cxx
 .idea/
-*.png
-*.mp4
+device-*.png
+device-*.mp4
