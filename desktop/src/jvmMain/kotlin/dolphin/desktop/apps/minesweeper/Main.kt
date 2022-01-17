@@ -1,6 +1,7 @@
+package dolphin.desktop.apps.minesweeper
+
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import dolphin.desktop.apps.minesweeper.DesktopMineUi
 import java.io.File
 
 fun main() = application {

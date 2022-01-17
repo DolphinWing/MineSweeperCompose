@@ -10,7 +10,7 @@ buildscript {
     }
 }
 
-group = "dolphin.apps.desktop"
+group = "dolphin.desktop.apps"
 version = "1.0"
 
 allprojects {

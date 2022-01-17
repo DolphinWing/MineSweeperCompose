@@ -6,7 +6,7 @@ plugins {
     id("com.android.library")
 }
 
-group = "dolphin.apps.desktop"
+group = "dolphin.desktop.apps"
 version = "1.0"
 
 kotlin {

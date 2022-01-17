@@ -4,7 +4,7 @@ plugins {
     kotlin("android")
 }
 
-group = "dolphin.apps.desktop"
+group = "dolphin.desktop.apps"
 version = "1.0"
 
 repositories {
@@ -45,8 +45,8 @@ android {
         applicationId = "dolphin.android.apps.minesweeper"
         minSdk = 23
         targetSdk = 31
-        versionCode = 21
-        versionName = "1.3.0"
+        versionCode = 22
+        versionName = "1.4.0"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

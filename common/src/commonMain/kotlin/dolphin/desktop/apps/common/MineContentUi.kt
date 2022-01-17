@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun ContentViewWidget(
-    spec: MineSpec,
+    spec: MineSpec = MineSpec(),
     showConfig: Boolean = false,
     row: Int = 6,
     column: Int = 6,
@@ -161,8 +161,7 @@ private fun HeaderWidget(
 @Composable
 private fun MineCountWidget(model: BasicMineModel?, modifier: Modifier = Modifier) {
     Text(
-        // String.format("%03d", model?.remainingMines?.collectAsState()?.value ?: 0),
-        model?.remainingMines?.collectAsState()?.value?.toString() ?: "0",
+        model?.remainingMines?.collectAsState()?.value?.toString()?.padStart(5, '0') ?: "00000",
         style = TextStyle(
             color = Color.Red,
             fontSize = 24.sp,
@@ -191,8 +190,7 @@ private fun SmileyIcon(
 @Composable
 private fun PlayClockWidget(model: BasicMineModel?, modifier: Modifier = Modifier) {
     Text(
-        // String.format("%05d", model?.clock?.collectAsState()?.value ?: 0,
-        model?.clock?.collectAsState()?.value?.toString() ?: "0",
+        model?.clock?.collectAsState()?.value?.toString()?.padStart(5, '0') ?: "00000",
         style = TextStyle(
             color = Color.Red,
             fontSize = 24.sp,
@@ -490,11 +488,7 @@ private fun ConfigPane(
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Button(onClick = {
                         composableScope.launch {
-                            model?.generateMineMap(
-                                rows.value,
-                                columns.value,
-                                mines.value
-                            )
+                            model?.generateMineMap(rows.value, columns.value, mines.value)
                             visible.value = model?.onTheWayToFunnyMode() == true
                             if (model != null) onNewGameCreated?.invoke(model)
                         }
