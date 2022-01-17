@@ -3,7 +3,7 @@ package dolphin.desktop.apps.common
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.random.Random
 
-abstract class BaseMineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMines: Int = 10) {
+abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int = 10) {
     companion object {
         private const val MINED = -99
     }
@@ -94,7 +94,7 @@ abstract class BaseMineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMine
         this.column.emit(column)
         // ensure mines smaller than map size
         this.mines.emit(if (mines > mapSize) mapSize else mines)
-        log( "create ${row}x$column with ${this.mines.value} mines")
+        log("create ${row}x$column with ${this.mines.value} mines")
 
         markedMines = 0 // reset counter
         clock.emit(0) // reset clock
@@ -205,7 +205,7 @@ abstract class BaseMineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMine
         if (running) {
             gameState.emit(markAsMine(row, column))
         } else {
-            log( "current game state: ${gameState.value}")
+            log("current game state: ${gameState.value}")
         }
     }
 
@@ -223,7 +223,7 @@ abstract class BaseMineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMine
         markedMines++
         remainingMines.emit(this.mines.value - markedMines)
         gameState.emit(if (verifyMineClear()) GameState.Cleared else GameState.Running)
-        if (gameState.value == GameState.Cleared) log( "You won!")
+        if (gameState.value == GameState.Cleared) log("You won!")
         return gameState.value
     }
 
@@ -233,7 +233,7 @@ abstract class BaseMineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMine
             --markedMines
             remainingMines.emit(this.mines.value - markedMines)
         } else {
-            log( "not running")
+            log("not running")
         }
     }
 
@@ -253,17 +253,16 @@ abstract class BaseMineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMine
         mineMap.put(oldIndex, 0) // remove mine
         var newIndex = randomNewMine()
         while (newIndex == oldIndex) newIndex = randomNewMine()
-        log( "move $oldIndex to $newIndex")
+        log("move $oldIndex to $newIndex")
         mineMap.put(newIndex, MINED)
     }
-
 
 
     suspend fun stepOnBlock(row: Int, column: Int) {
         if (running) {
             gameState.emit(stepOn(row, column))
         } else {
-            log(  "current game state: ${gameState.value}")
+            log("current game state: ${gameState.value}")
         }
     }
 
@@ -275,11 +274,11 @@ abstract class BaseMineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMine
      * @return game state after step on the block
      */
     private suspend fun stepOn(row: Int, column: Int): GameState {
-        log(  "step on ($row, $column)")
+        log("step on ($row, $column)")
         if (gameState.value == GameState.Review) return GameState.Review
         val state = if (mineExists(row, column)) {
             if (firstClick) { // recalculate mine map because first click cannot be a mine
-                log(  "recalculate mine map")
+                log("recalculate mine map")
                 loading.emit(true)
                 moveMineToAnotherPlace(toIndex(row, column)) // move to another place
                 calculateField() // recalculate map
@@ -293,7 +292,7 @@ abstract class BaseMineModel(val maxRows: Int = 6, val maxCols: Int = 5, maxMine
                     block.value = BlockState.Mined
                 }
                 changeState(row, column, BlockState.Mined)
-                log( "Game over! you lost!!")
+                log("Game over! you lost!!")
                 GameState.Exploded
             }
         } else { // not mine, reveal it

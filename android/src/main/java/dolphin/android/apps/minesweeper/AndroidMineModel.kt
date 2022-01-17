@@ -4,7 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.util.Log
-import dolphin.desktop.apps.common.BaseMineModel
+import dolphin.desktop.apps.common.BasicMineModel
 
 /**
  * data model for app
@@ -13,8 +13,8 @@ import dolphin.desktop.apps.common.BaseMineModel
  * @param maxCols max columns of the map, depending on screen size
  * @param maxMines max mines in the map
  */
-class MineModel(maxRows: Int, maxCols: Int, maxMines: Int) :
-    BaseMineModel(maxRows, maxCols, maxMines) {
+class AndroidMineModel(maxRows: Int, maxCols: Int, maxMines: Int) :
+    BasicMineModel(maxRows, maxCols, maxMines) {
     companion object {
         private const val TAG = "MineModel"
     }

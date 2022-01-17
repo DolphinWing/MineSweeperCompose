@@ -23,13 +23,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val (maxRow, maxColumn) = MineUi.calculateScreenSize(resources.displayMetrics)
+        val (maxRow, maxColumn) = AndroidMineSpec.calculateScreenSize(resources.displayMetrics)
+        val spec = AndroidMineSpec(
+            maxRow, maxColumn, mines = 10, strings = AndroidConfigStrings(this)
+        )
 
         setContent {
-            MineUi.MainUi(maxRow, maxColumn, onVibrate = { whenVibrate() }) { model ->
-                Log.d(TAG, "on new game created: ${model.row}x${model.column}")
-                if (model.funny.value == true) toastAboutFunnyModeEnabled()
-            }
+            AndroidMineUi(
+                spec = spec,
+                onVibrate = { whenVibrate() },
+                onNewGameCreated = { model ->
+                    Log.d(TAG, "on new game created: ${model.row}x${model.column}")
+                    if (model.funny.value) toastAboutFunnyModeEnabled()
+                },
+            )
         }
     }
 
