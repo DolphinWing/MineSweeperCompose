@@ -27,6 +27,10 @@ class AndroidMineModel(maxRows: Int, maxCols: Int, maxMines: Int) :
         clockHandler.tick()
     }
 
+    override fun stopTicking() {
+        clockHandler.removeMessages(0)
+    }
+
     private val clockHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             if (running) {

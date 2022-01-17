@@ -7,14 +7,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 
+/**
+ * Mine game spec
+ *
+ * @property face [Painter] implementations by platform
+ * @property block [Painter] implementations by platform
+ * @property maxRows max rows
+ * @property maxColumns max columns
+ * @property maxMines max mines
+ * @property strings ui strings
+ */
 open class MineSpec(
     val maxRows: Int = 12,
     val maxColumns: Int = 8,
     val maxMines: Int = 10,
-    val face: FacePainter = FacePainter(),
-    val block: BlockPainter = BlockPainter(),
+    val face: FacePainter = DummyFacePainter(),
+    val block: BlockPainter = DummyBlockPainter(),
     val strings: ConfigStrings = ConfigStrings(),
 ) {
+    /**
+     * @property BLOCK_SIZE block size
+     * @property SMILEY_SIZE smiley button size
+     */
     companion object {
         const val BLOCK_SIZE = 48
         const val SMILEY_SIZE = 64
@@ -25,6 +39,12 @@ open class MineSpec(
         Color.Red, Color.Blue.copy(blue = .4f), Color.Red.copy(red = .4f), Color.Magenta
     )
 
+    /**
+     * Mine number color
+     *
+     * @param value mine count
+     * @return text color
+     */
     fun textBlockColor(value: Int) = when {
         value in 1..6 -> textBlockColors[value]
         value > 6 -> textBlockColors.last()
@@ -32,29 +52,35 @@ open class MineSpec(
         else -> Color.Black
     }
 
-    open class FacePainter {
+    /**
+     * Smiley [Painter] implementations by platform
+     */
+    interface FacePainter {
         @Composable
-        open fun happy(): Painter = rememberVectorPainter(Icons.Default.Star)
+        fun happy(): Painter
 
         @Composable
-        open fun sad(): Painter = rememberVectorPainter(Icons.Default.Star)
+        fun sad(): Painter
 
         @Composable
-        open fun joy(): Painter = rememberVectorPainter(Icons.Default.Star)
+        fun joy(): Painter
     }
 
-    open class BlockPainter {
+    /**
+     * Block [Painter] implementations by platform
+     */
+    interface BlockPainter {
         @Composable
-        open fun plain(): Painter = rememberVectorPainter(Icons.Default.Star)
+        fun plain(): Painter
 
         @Composable
-        open fun mined(): Painter = rememberVectorPainter(Icons.Default.Star)
+        fun mined(): Painter
 
         @Composable
-        open fun dead(): Painter = rememberVectorPainter(Icons.Default.Star)
+        fun dead(): Painter
 
         @Composable
-        open fun marked(): Painter = rememberVectorPainter(Icons.Default.Star)
+        fun marked(): Painter
     }
 
     open class ConfigStrings {
@@ -65,4 +91,29 @@ open class MineSpec(
         open fun show(): String = "Show"
         open fun apply(): String = "Apply"
     }
+}
+
+private class DummyFacePainter : MineSpec.FacePainter {
+    @Composable
+    override fun happy(): Painter = rememberVectorPainter(Icons.Default.Star)
+
+    @Composable
+    override fun sad(): Painter = rememberVectorPainter(Icons.Default.Star)
+
+    @Composable
+    override fun joy(): Painter = rememberVectorPainter(Icons.Default.Star)
+}
+
+private class DummyBlockPainter : MineSpec.BlockPainter {
+    @Composable
+    override fun plain(): Painter = rememberVectorPainter(Icons.Default.Star)
+
+    @Composable
+    override fun mined(): Painter = rememberVectorPainter(Icons.Default.Star)
+
+    @Composable
+    override fun dead(): Painter = rememberVectorPainter(Icons.Default.Star)
+
+    @Composable
+    override fun marked(): Painter = rememberVectorPainter(Icons.Default.Star)
 }

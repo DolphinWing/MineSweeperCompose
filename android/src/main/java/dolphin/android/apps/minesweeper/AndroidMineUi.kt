@@ -43,8 +43,8 @@ fun AndroidMineUi(
     ) {
         ContentViewWidget(
             spec = spec,
-            row = model.row.collectAsState().value,
-            column = model.column.collectAsState().value,
+            row = model.rows.collectAsState().value,
+            column = model.columns.collectAsState().value,
             mines = model.mines.collectAsState().value,
             loading = model.loading.collectAsState().value,
             model = model,

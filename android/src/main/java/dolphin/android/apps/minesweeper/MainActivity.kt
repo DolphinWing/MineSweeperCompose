@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
                 spec = spec,
                 onVibrate = { whenVibrate() },
                 onNewGameCreated = { model ->
-                    Log.d(TAG, "on new game created: ${model.row}x${model.column}")
+                    Log.d(TAG, "on new game created: ${model.rows}x${model.columns}")
                     if (model.funny.value) toastAboutFunnyModeEnabled()
                 },
             )

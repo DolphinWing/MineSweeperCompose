@@ -1,8 +1,17 @@
 package dolphin.desktop.apps.common
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
+/**
+ * Basic mine model implementation.
+ *
+ * @param maxRows max rows
+ * @param maxCols max columns
+ * @param maxMines max mines
+ */
 abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int = 10) {
     companion object {
         private const val MINED = -99
@@ -10,6 +19,7 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
 
     abstract fun log(message: String)
     abstract fun startTicking()
+    abstract fun stopTicking()
 
     /**
      * Current game state
@@ -24,12 +34,12 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
     /**
      * Current rows of the map
      */
-    val row = MutableStateFlow(maxRows)
+    val rows = MutableStateFlow(maxRows)
 
     /**
      * Current column of the map
      */
-    val column = MutableStateFlow(maxCols)
+    val columns = MutableStateFlow(maxCols)
 
     /**
      * Current mines of the map
@@ -57,7 +67,7 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
     val remainingMines = MutableStateFlow(0)
 
     private val mapSize: Int
-        get() = this.row.value * this.column.value
+        get() = this.rows.value * this.columns.value
 
     /**
      * block individual state
@@ -80,27 +90,30 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
      *
      * @param row target rows of the map
      * @param column target columns of the map
-     * @param mines target mines of the map
+     * @param mine target mines of the map
      */
     suspend fun generateMineMap(
-        row: Int = this.row.value,
-        column: Int = this.column.value,
-        mines: Int = this.mines.value,
-    ) {
+        row: Int = this.rows.value,
+        column: Int = this.columns.value,
+        mine: Int = this.mines.value,
+    ) = withContext(Dispatchers.Default) {
         loading.emit(true)
         mineMap.clear()
+        stopTicking() // generateMineMap
+        blockState.forEach { block -> block.emit(BlockState.None) } // reset block state
 
-        this.row.emit(row)
-        this.column.emit(column)
         // ensure mines smaller than map size
-        this.mines.emit(if (mines > mapSize) mapSize else mines)
-        log("create ${row}x$column with ${this.mines.value} mines")
+        val mineCount = if (mine > mapSize) mapSize else mine
+        log("create ${row}x$column with $mineCount mines")
 
         markedMines = 0 // reset counter
+        rows.emit(row)
+        columns.emit(column)
+        mines.emit(mineCount)
         clock.emit(0) // reset clock
-        remainingMines.emit(this.mines.value)
+        remainingMines.emit(mineCount)
 
-        putMinesIntoField()
+        putMinesIntoField(mineCount)
         calculateField() // generateMineMap
 
         gameState.emit(GameState.Start)
@@ -108,9 +121,9 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
         firstClick = true
     }
 
-    private fun putMinesIntoField() {
-        repeat(this.mines.value) {
-            mineMap.put(randomNewMine(), MINED)
+    private fun putMinesIntoField(mineCount: Int = this.mines.value) {
+        repeat(mineCount) {
+            mineMap[randomNewMine()] = MINED
         }
     }
 
@@ -139,7 +152,7 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
                     if (mineExists(toSouthIndex(index))) ++count
                     if (notLastColumn(index) && mineExists(toSouthEastIndex(index))) ++count
                 }
-                mineMap.put(index, count)
+                mineMap[index] = count
             }
         }
     }
@@ -151,7 +164,7 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
      * @param column column index of the block
      * @return array index
      */
-    fun toIndex(row: Int, column: Int) = row * this.column.value + column
+    fun toIndex(row: Int, column: Int) = row * this.columns.value + column
 
     private fun mineExists(index: Int): Boolean = if (index in 0 until mapSize)
         mineMap[index] == MINED else false
@@ -169,20 +182,20 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
         return mineMap[toIndex(row, column)] ?: 0
     }
 
-    private fun toRow(index: Int): Int = index / this.column.value
-    private fun toColumn(index: Int): Int = index % this.column.value
+    private fun toRow(index: Int): Int = index / this.columns.value
+    private fun toColumn(index: Int): Int = index % this.columns.value
     private fun notFirstRow(index: Int): Boolean = toRow(index) != 0
-    private fun notLastRow(index: Int): Boolean = toRow(index) != (this.row.value - 1)
+    private fun notLastRow(index: Int): Boolean = toRow(index) != (this.rows.value - 1)
     private fun notFirstColumn(index: Int): Boolean = toColumn(index) != 0
-    private fun notLastColumn(index: Int): Boolean = toColumn(index) != (this.column.value - 1)
+    private fun notLastColumn(index: Int): Boolean = toColumn(index) != (this.columns.value - 1)
 
     private fun toNorthWestIndex(index: Int): Int = toWestIndex(toNorthIndex(index))
-    private fun toNorthIndex(index: Int): Int = index - this.column.value
+    private fun toNorthIndex(index: Int): Int = index - this.columns.value
     private fun toNorthEastIndex(index: Int): Int = toEastIndex(toNorthIndex(index))
     private fun toWestIndex(index: Int): Int = index - 1
     private fun toEastIndex(index: Int): Int = index + 1
     private fun toSouthWestIndex(index: Int): Int = toWestIndex(toSouthIndex(index))
-    private fun toSouthIndex(index: Int): Int = index + this.column.value
+    private fun toSouthIndex(index: Int): Int = index + this.columns.value
     private fun toSouthEastIndex(index: Int): Int = toEastIndex(toSouthIndex(index))
 
     /**
@@ -201,6 +214,12 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
         else -> false
     }
 
+    /**
+     * Mark a block as a mine
+     *
+     * @param row row index of the block
+     * @param column column index of the block
+     */
     suspend fun markAsMineBlock(row: Int, column: Int) {
         if (running) {
             gameState.emit(markAsMine(row, column))
@@ -211,6 +230,9 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
 
     /**
      * Mark a block as a mine
+     *
+     * @param row row index of the block
+     * @param column column index of the block
      */
     private suspend fun markAsMine(row: Int, column: Int): GameState {
         if (gameState.value == GameState.Review) return GameState.Review
@@ -227,6 +249,12 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
         return gameState.value
     }
 
+    /**
+     * Unmark the block as a mine
+     *
+     * @param row row index of the block
+     * @param column column index of the block
+     */
     suspend fun unmarkMine(row: Int, column: Int) {
         if (running) {
             changeState(row, column, BlockState.None)
@@ -250,11 +278,11 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
     }
 
     private fun moveMineToAnotherPlace(oldIndex: Int) {
-        mineMap.put(oldIndex, 0) // remove mine
+        mineMap[oldIndex] = 0 // remove mine
         var newIndex = randomNewMine()
         while (newIndex == oldIndex) newIndex = randomNewMine()
         log("move $oldIndex to $newIndex")
-        mineMap.put(newIndex, MINED)
+        mineMap[newIndex] = MINED
     }
 
 
@@ -292,15 +320,19 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
                     block.value = BlockState.Mined
                 }
                 changeState(row, column, BlockState.Mined)
+                stopTicking() // GameState.Exploded
                 log("Game over! you lost!!")
                 GameState.Exploded
             }
         } else { // not mine, reveal it
             changeState(row, column, BlockState.Text)
-            if (mineMap.get(toIndex(row, column)) == 0) { // auto click
+            if (mineMap[toIndex(row, column)] == 0) { // auto click
                 autoClick0(toIndex(row, column)) // stepOn
             }
-            if (verifyMineClear()) GameState.Cleared else GameState.Running
+            if (verifyMineClear()) {
+                stopTicking() // GameState.Cleared
+                GameState.Cleared
+            } else GameState.Running
         }
         gameState.emit(state)
         if (firstClick) {
@@ -318,7 +350,7 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
     private fun stepOn0(index: Int) {
         if (isBlockNotOpen(index)) {
             blockState[index].value = BlockState.Text
-            if (mineMap.get(index) == 0) { // auto click
+            if (mineMap[index] == 0) { // auto click
                 autoClick0(index) // stepOn0
             }
         }
@@ -342,7 +374,7 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
 
     private var funnyCount = 0
     private val soFunny: Boolean
-        get() = row.value == 5 && column.value == 4 && mines.value == 5
+        get() = rows.value == 5 && columns.value == 4 && mines.value == 5
 
     /**
      * Check if we are about to start funny mode or not

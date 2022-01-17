@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -66,41 +67,41 @@ fun ContentViewWidget(
     onVibrate: (() -> Unit)? = null,
     onNewGameCreated: ((model: BasicMineModel) -> Unit)? = null,
 ) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Text("Game state: ${model?.gameState?.collectAsState()?.value}")
-        HeaderWidget(model = model, onNewGameCreated = onNewGameCreated, spec = spec)
-        Box(modifier = Modifier.weight(1f)) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize().padding(start = 8.dp, end = 8.dp, bottom = 24.dp)
+        ) {
+            // Text("Game state: ${model?.gameState?.collectAsState()?.value}")
+            HeaderWidget(model = model, onNewGameCreated = onNewGameCreated, spec = spec)
+            MineField(
+                model = model,
+                spec = spec,
+                row = row,
+                column = column,
+                onVibrate = onVibrate,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        ConfigPane(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            model = model,
+            spec = spec,
+            row = row,
+            column = column,
+            mine = mines,
+            showConfig = showConfig,
+            onNewGameCreated = onNewGameCreated,
+        )
+
+        if (loading) {
             Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(start = 8.dp, end = 8.dp, bottom = 24.dp),
-                contentAlignment = Alignment.TopCenter,
+                Modifier.fillMaxSize().background(Color.Black.copy(alpha = .5f)),
+                contentAlignment = Alignment.Center,
             ) {
-                if (loading) {
-                    CircularProgressIndicator()
-                } else {
-                    MineField(
-                        model = model,
-                        row = row,
-                        column = column,
-                        onVibrate = onVibrate,
-                        spec = spec,
-                    )
-                }
-            }
-            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                ConfigPane(
-                    model = model,
-                    spec = spec,
-                    row = row,
-                    column = column,
-                    mine = mines,
-                    showConfig = showConfig,
-                    onNewGameCreated = onNewGameCreated,
-                )
+                CircularProgressIndicator()
             }
         }
     }
@@ -129,7 +130,7 @@ private fun HeaderWidget(
     val composableScope = rememberCoroutineScope()
 
     Row(
-        modifier = Modifier.padding(32.dp),
+        modifier = Modifier.padding(24.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -208,9 +209,10 @@ private fun MineField(
     row: Int,
     column: Int,
     spec: MineSpec,
+    modifier: Modifier = Modifier,
     onVibrate: (() -> Unit)? = null,
 ) {
-    Column {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         repeat(row) { r ->
             Row {
                 repeat(column) { c ->
@@ -407,8 +409,9 @@ fun TextBlock(value: Int, spec: MineSpec = MineSpec()) {
 
 @Composable
 private fun ConfigPane(
+    modifier: Modifier = Modifier,
     model: BasicMineModel? = null,
-    spec: MineSpec,
+    spec: MineSpec = MineSpec(),
     row: Int = 6,
     column: Int = 5,
     mine: Int = 10,
@@ -427,14 +430,15 @@ private fun ConfigPane(
 
     fun restoreConfig() {
         // reset values to current config
-        rows.value = model?.row?.value ?: 6
-        columns.value = model?.column?.value ?: 5
+        rows.value = model?.rows?.value ?: 6
+        columns.value = model?.columns?.value ?: 5
         mines.value = model?.mines?.value ?: 10
         // hide config pane
         visible.value = visible.value.not()
     }
 
     Surface(
+        modifier = modifier,
         color = if (visible.value) Color.White else Color.Transparent,
         elevation = if (visible.value) 8.dp else 0.dp,
         // border = Border(Color.LightGray, 1.dp),
@@ -442,7 +446,7 @@ private fun ConfigPane(
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(8.dp)
         ) {
             if (visible.value) {
                 TextedSlider(
@@ -477,12 +481,13 @@ private fun ConfigPane(
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(horizontal = 8.dp),
             ) {
                 TextButton(onClick = { restoreConfig() }) {
                     Text(buttonText)
                 }
                 if (visible.value) {
+                    Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Button(onClick = {
                         composableScope.launch {
                             model?.generateMineMap(

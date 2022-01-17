@@ -8,17 +8,23 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import dolphin.desktop.apps.common.MineSpec
 
+/**
+ * Android [MineSpec] implementation.
+ *
+ * @param rows max rows
+ * @param cols max columns
+ * @param mines max mines
+ * @param strings string maps
+ */
 class AndroidMineSpec(
     rows: Int = 6,
     cols: Int = 5,
-    mines: Int = 10,
+    mines: Int = 40,
     strings: ConfigStrings = ConfigStrings(),
-) :
-    MineSpec(
-        maxRows = rows, maxColumns = cols, maxMines = mines,
-        face = AndroidFacePainter(), block = AndroidBlockPainter(), strings = strings,
-    ) {
-
+) : MineSpec(
+    maxRows = rows, maxColumns = cols, maxMines = mines,
+    face = AndroidFacePainter(), block = AndroidBlockPainter(), strings = strings,
+) {
     companion object {
         private const val TAG = "AndroidMineSpec"
 
@@ -30,15 +36,15 @@ class AndroidMineSpec(
         fun calculateScreenSize(displayMetrics: DisplayMetrics): Pair<Int, Int> {
             val height: Float = displayMetrics.heightPixels / displayMetrics.density
             val width: Float = displayMetrics.widthPixels / displayMetrics.density
-            val r = kotlin.math.floor((height - 220) / MineSpec.BLOCK_SIZE).toInt()
-            val c = kotlin.math.floor((width - 24) / MineSpec.BLOCK_SIZE).toInt()
+            val r = kotlin.math.floor((height - 160) / BLOCK_SIZE).toInt()
+            val c = kotlin.math.floor((width - 24) / BLOCK_SIZE).toInt()
             Log.v(TAG, "screen: $width x $height ==> rows = $r, columns = $c")
             return Pair(r, c)
         }
     }
 }
 
-private class AndroidFacePainter : MineSpec.FacePainter() {
+private class AndroidFacePainter : MineSpec.FacePainter {
     @Composable
     override fun sad(): Painter = painterResource(R.drawable.face_cry)
 
@@ -49,7 +55,7 @@ private class AndroidFacePainter : MineSpec.FacePainter() {
     override fun happy(): Painter = painterResource(R.drawable.face_smile)
 }
 
-private class AndroidBlockPainter : MineSpec.BlockPainter() {
+private class AndroidBlockPainter : MineSpec.BlockPainter {
     @Composable
     override fun plain(): Painter = painterResource(R.drawable.box)
 
