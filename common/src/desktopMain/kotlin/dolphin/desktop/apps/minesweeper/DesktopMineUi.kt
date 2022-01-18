@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 
@@ -24,10 +23,6 @@ fun DesktopMineUi(debug: Boolean = false) {
         ContentViewWidget(
             model = model,
             spec = DesktopMineSpec(),
-            row = model.rows.collectAsState().value,
-            column = model.columns.collectAsState().value,
-            mines = model.mines.collectAsState().value,
-            loading = model.loading.collectAsState().value,
             debug = debug,
         )
     }
@@ -36,13 +31,13 @@ fun DesktopMineUi(debug: Boolean = false) {
 @Preview
 @Composable
 private fun PreviewDesktopMineUi() {
-    ContentViewWidget(
-        spec = DesktopMineSpec(),
-        row = 6,
-        column = 5,
-        mines = 10,
-        loading = false,
-    )
+    ContentViewWidget(spec = DesktopMineSpec())
+}
+
+@Preview
+@Composable
+private fun PreviewDesktopMineUiShowConfig() {
+    ContentViewWidget(spec = DesktopMineSpec(), showConfig = true)
 }
 
 @Preview

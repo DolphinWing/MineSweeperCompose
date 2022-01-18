@@ -43,6 +43,7 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 api(compose.preview)
+                implementation(compose.uiTooling)
             }
         }
         val desktopTest by getting

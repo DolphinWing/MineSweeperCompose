@@ -34,6 +34,10 @@ open class MineSpec(
         const val SMILEY_SIZE = 64
     }
 
+    open fun blockSize(): Int = BLOCK_SIZE
+
+    open fun smileySize(): Int = SMILEY_SIZE
+
     private val textBlockColors = arrayOf(
         Color.White, Color.Blue, Color.Green.copy(green = .5f),
         Color.Red, Color.Blue.copy(blue = .4f), Color.Red.copy(red = .4f), Color.Magenta

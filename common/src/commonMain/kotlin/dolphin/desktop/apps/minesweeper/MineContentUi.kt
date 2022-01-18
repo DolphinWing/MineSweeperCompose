@@ -22,15 +22,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Slider
 import androidx.compose.material.SliderDefaults
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -56,17 +53,18 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun ContentViewWidget(
+    model: BasicMineModel = BasicMineModel(),
     spec: MineSpec = MineSpec(),
     showConfig: Boolean = false,
-    row: Int = 6,
-    column: Int = 6,
-    mines: Int = 10,
-    loading: Boolean = false,
-    model: BasicMineModel? = null,
     onVibrate: (() -> Unit)? = null,
     onNewGameCreated: ((model: BasicMineModel) -> Unit)? = null,
     debug: Boolean = false,
 ) {
+    val rows = model.rows.collectAsState()
+    val columns = model.columns.collectAsState()
+    val mines = model.mines.collectAsState()
+    val loading = model.loading.collectAsState()
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             verticalArrangement = Arrangement.Center,
@@ -78,8 +76,8 @@ fun ContentViewWidget(
             MineField(
                 model = model,
                 spec = spec,
-                row = row,
-                column = column,
+                row = rows.value,
+                column = columns.value,
                 onVibrate = onVibrate,
                 modifier = Modifier.weight(1f),
             )
@@ -89,15 +87,15 @@ fun ContentViewWidget(
             modifier = Modifier.align(Alignment.BottomCenter),
             model = model,
             spec = spec,
-            row = row,
-            column = column,
-            mine = mines,
+            row = rows.value,
+            column = columns.value,
+            mine = mines.value,
             showConfig = showConfig,
             onNewGameCreated = onNewGameCreated,
             enableGodMode = debug,
         )
 
-        if (loading) {
+        if (loading.value) {
             Box(
                 Modifier.fillMaxSize().background(Color.Black.copy(alpha = .5f)),
                 contentAlignment = Alignment.Center,
@@ -109,14 +107,10 @@ fun ContentViewWidget(
 }
 
 @Composable
-private fun BlockImageDrawable(
-    image: Painter,
-    width: Dp = MineSpec.BLOCK_SIZE.dp,
-    height: Dp = MineSpec.BLOCK_SIZE.dp,
-) {
+private fun BlockImageDrawable(image: Painter, size: Dp = MineSpec.BLOCK_SIZE.dp) {
     Image(
         image,
-        modifier = Modifier.size(width, height),
+        modifier = Modifier.size(size),
         contentScale = ContentScale.Fit,
         contentDescription = null,
     )
@@ -125,10 +119,17 @@ private fun BlockImageDrawable(
 @Composable
 private fun HeaderWidget(
     spec: MineSpec = MineSpec(),
-    model: BasicMineModel? = null,
+    model: BasicMineModel = BasicMineModel(),
     onNewGameCreated: ((model: BasicMineModel) -> Unit)? = null,
 ) {
     val composableScope = rememberCoroutineScope()
+
+    fun makeNewMap() {
+        composableScope.launch {
+            model.generateMineMap()
+            onNewGameCreated?.invoke(model)
+        }
+    }
 
     Row(
         modifier = Modifier.padding(24.dp),
@@ -137,30 +138,20 @@ private fun HeaderWidget(
     ) {
         MineCountWidget(model = model, modifier = Modifier.weight(1f))
 
-        model?.let { mineModel ->
-            Box(
-                modifier = Modifier.clickable(onClick = {
-                    composableScope.launch {
-                        mineModel.generateMineMap()
-                        onNewGameCreated?.invoke(mineModel)
-                    }
-                }),
-            ) {
-                SmileyIcon(
-                    state = mineModel.gameState.collectAsState().value,
-                    facePainter = spec.facePainter,
-                )
-            }
-        } ?: kotlin.run { Icon(Icons.Default.Refresh, contentDescription = null) }
+        Box(modifier = Modifier.clickable(onClick = { makeNewMap() })) {
+            SmileyIcon(state = model.gameState.collectAsState().value, spec = spec)
+        }
 
         PlayClockWidget(model = model, Modifier.weight(1f))
     }
 }
 
+private fun Int.toMineString(padding: Int = 5): String = toString().padStart(padding, '0')
+
 @Composable
 private fun MineCountWidget(modifier: Modifier = Modifier, model: BasicMineModel? = null) {
     Text(
-        model?.remainingMines?.collectAsState()?.value?.toString()?.padStart(5, '0') ?: "00000",
+        (model?.remainingMines?.collectAsState()?.value ?: 0).toMineString(),
         style = TextStyle(color = Color.Red, fontSize = 24.sp, fontFamily = FontFamily.Monospace),
         modifier = modifier,
         textAlign = TextAlign.Center,
@@ -168,22 +159,21 @@ private fun MineCountWidget(modifier: Modifier = Modifier, model: BasicMineModel
 }
 
 @Composable
-private fun SmileyIcon(
-    state: GameState,
-    facePainter: MineSpec.FacePainter = MineSpec.DefaultFacePainter(),
-) {
+private fun SmileyIcon(state: GameState, spec: MineSpec = MineSpec()) {
     val image = when (state) {
-        GameState.Exploded, GameState.Review -> facePainter.sad()
-        GameState.Cleared -> facePainter.joy()
-        else -> facePainter.happy()
+        GameState.Exploded, GameState.Review -> spec.facePainter.sad()
+        GameState.Cleared -> spec.facePainter.joy()
+        else -> spec.facePainter.happy()
     }
-    BlockImageDrawable(image, MineSpec.SMILEY_SIZE.dp, MineSpec.SMILEY_SIZE.dp)
+    BlockImageDrawable(image, spec.smileySize().dp)
 }
+
+private fun Long.toMineString(padding: Int = 5): String = toString().padStart(padding, '0')
 
 @Composable
 private fun PlayClockWidget(model: BasicMineModel?, modifier: Modifier = Modifier) {
     Text(
-        model?.clock?.collectAsState()?.value?.toString()?.padStart(5, '0') ?: "00000",
+        (model?.clock?.collectAsState()?.value ?: 0).toMineString(),
         style = TextStyle(color = Color.Red, fontSize = 24.sp, fontFamily = FontFamily.Monospace),
         modifier = modifier,
         textAlign = TextAlign.Center,
@@ -258,41 +248,32 @@ fun BlockButton(
     onVibrate: (() -> Unit)? = null,
     spec: MineSpec = MineSpec(),
 ) {
-    when (blockState) {
-        BlockState.Marked ->
-            MarkedBlock(model, row, column, onVibrate = onVibrate, blockPainter = spec.blockPainter)
-        BlockState.Mined, BlockState.Hidden ->
-            MineBlock(clicked = blockState == BlockState.Mined, blockPainter = spec.blockPainter)
-        BlockState.Text ->
-            TextBlock(model, row, column, debug = debug ?: false, spec = spec)
-        else ->
-            BaseBlock(
-                model = model,
-                row = row,
-                column = column,
-                debug = debug ?: model?.funny?.collectAsState()?.value ?: false,
-                onVibrate = onVibrate,
-                blockPainter = spec.blockPainter,
-            )
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun BaseBlock(
-    model: BasicMineModel? = null,
-    row: Int,
-    column: Int,
-    debug: Boolean = false,
-    onVibrate: (() -> Unit)? = null,
-    blockPainter: MineSpec.BlockPainter = MineSpec.DefaultBlockPainter(),
-) {
     val composableScope = rememberCoroutineScope()
+    val value = model?.getMineIndicator(row, column) ?: 0
 
-    Box(
-        modifier = Modifier
-            .size(MineSpec.BLOCK_SIZE.dp)
-            .combinedClickable(
+    when (blockState) {
+        BlockState.Text ->
+            TextBlock(value = value, debug = debug ?: false, spec = spec)
+
+        BlockState.Mined, BlockState.Hidden ->
+            MineBlock(clicked = blockState == BlockState.Mined, spec = spec)
+
+        BlockState.Marked ->
+            MarkedBlock(
+                onLongClick = {
+                    composableScope.launch {
+                        model?.unmarkMine(row, column)
+                    }
+                    onVibrate?.invoke()
+                },
+                spec = spec,
+            )
+
+        else ->
+            BasicBlock(
+                value = value,
+                debug = debug ?: model?.funny?.collectAsState()?.value ?: false,
+                spec = spec,
                 onClick = {
                     composableScope.launch {
                         model?.stepOnBlock(row, column)
@@ -304,105 +285,86 @@ private fun BaseBlock(
                     }
                     onVibrate?.invoke()
                 },
-            ),
-    ) {
-        Box {
-            BlockImageDrawable(image = blockPainter.plain())
-            if (debug) Box { TextBlock(model, row, column, debug = debug) }
-        }
+            )
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MarkedBlock(
-    model: BasicMineModel? = null,
-    row: Int,
-    column: Int,
-    onVibrate: (() -> Unit)? = null,
-    blockPainter: MineSpec.BlockPainter = MineSpec.DefaultBlockPainter(),
+private fun BasicBlock(
+    value: Int,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    spec: MineSpec = MineSpec(),
+    debug: Boolean = false,
 ) {
-    val composableScope = rememberCoroutineScope()
-
     Box(
-        modifier = Modifier
-            .size(MineSpec.BLOCK_SIZE.dp)
-            .combinedClickable(
-                onClick = { /* only support long click here */ },
-                onLongClick = {
-                    composableScope.launch {
-                        model?.unmarkMine(row, column)
-                    }
-                    onVibrate?.invoke()
-                }
-            ),
+        modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
     ) {
-        BlockImageDrawable(image = blockPainter.marked())
+        BlockImageDrawable(image = spec.blockPainter.plain(), size = spec.blockSize().dp)
+        if (debug) Box { TextBlock(value, debug = debug, spec = spec) }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MarkedBlock(onLongClick: () -> Unit, spec: MineSpec = MineSpec()) {
+    Box(
+        modifier = Modifier.combinedClickable(
+            onClick = { /* only support long click here */ },
+            onLongClick = onLongClick,
+        ),
+    ) {
+        BlockImageDrawable(image = spec.blockPainter.marked(), size = spec.blockSize().dp)
     }
 }
 
 @Composable
-private fun MineBlock(
-    clicked: Boolean = false,
-    blockPainter: MineSpec.BlockPainter = MineSpec.DefaultBlockPainter(),
-) {
-    val drawable = if (clicked) blockPainter.dead() else blockPainter.mined()
+private fun MineBlock(clicked: Boolean = false, spec: MineSpec = MineSpec()) {
+    val drawable = if (clicked) spec.blockPainter.dead() else spec.blockPainter.mined()
+
     Box(
         modifier = Modifier
-            .size(MineSpec.BLOCK_SIZE.dp)
             .border(BorderStroke(1.dp, color = Color.White))
             .background(Color.LightGray),
     ) {
-        BlockImageDrawable(image = drawable)
+        BlockImageDrawable(image = drawable, size = spec.blockSize().dp)
     }
 }
 
 @Composable
-private fun TextBlock(
-    model: BasicMineModel?,
-    row: Int,
-    column: Int,
-    spec: MineSpec = MineSpec(),
-    debug: Boolean = false
-) {
-    // Log.d(TAG, "textBlock: $row $column $debug")
-    val value = model?.getMineIndicator(row, column) ?: 0
+fun TextBlock(value: Int, spec: MineSpec = MineSpec(), debug: Boolean = false) {
     if (debug) {
         // TextBlock(value = value, defaultColor = Color.Gray)
-        Box(modifier = Modifier.size(MineSpec.BLOCK_SIZE.dp), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(spec.blockSize().dp), contentAlignment = Alignment.Center) {
             Text(
                 if (value < 0) "*" else "$value",
                 style = TextStyle(color = Color.Gray),
             )
         }
     } else {
-        TextBlock(value = value, spec = spec)
-    }
-}
-
-@Composable
-fun TextBlock(value: Int, spec: MineSpec = MineSpec()) {
-    Box(
-        modifier = Modifier
-            .size(MineSpec.BLOCK_SIZE.dp)
-            .border(BorderStroke(1.dp, color = Color.White))
-            .background(Color.LightGray),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "$value",
-            style = TextStyle(
-                color = spec.textBlockColor(value),
-                fontWeight = if (value > 0) FontWeight.Bold else FontWeight.Normal,
+        Box(
+            modifier = Modifier
+                .size(spec.blockSize().dp)
+                .border(BorderStroke(1.dp, color = Color.White))
+                .background(Color.LightGray),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "$value",
+                style = TextStyle(
+                    color = spec.textBlockColor(value),
+                    fontWeight = if (value > 0) FontWeight.Bold else FontWeight.Normal,
+                )
             )
-        )
+        }
     }
 }
 
 @Composable
 private fun ConfigPane(
     modifier: Modifier = Modifier,
-    model: BasicMineModel? = null,
+    model: BasicMineModel = BasicMineModel(),
     spec: MineSpec = MineSpec(),
     row: Int = 6,
     column: Int = 5,
@@ -416,16 +378,15 @@ private fun ConfigPane(
     val rows = remember { mutableStateOf(row) }
     val columns = remember { mutableStateOf(column) }
     val mines = remember { mutableStateOf(mine) }
-    val composableScope = rememberCoroutineScope()
-    val funny = model?.funny?.collectAsState() ?: remember { mutableStateOf(false) }
+    val funny = model.funny.collectAsState()
 
     val buttonText = if (visible.value) spec.strings.actionHide else spec.strings.actionShow
 
     fun restoreConfig() {
         // reset values to current config
-        rows.value = model?.rows?.value ?: 6
-        columns.value = model?.columns?.value ?: 5
-        mines.value = model?.mines?.value ?: 10
+        rows.value = model.rows.value
+        columns.value = model.columns.value
+        mines.value = model.mines.value
         // hide config pane
         visible.value = visible.value.not()
     }
@@ -472,9 +433,7 @@ private fun ConfigPane(
 
             Row(
                 horizontalArrangement = Arrangement.Start,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             ) {
                 TextButton(onClick = { restoreConfig() }) {
                     Text(buttonText)
@@ -482,10 +441,10 @@ private fun ConfigPane(
                 if (visible.value) {
                     Spacer(modifier = Modifier.requiredWidth(8.dp))
                     Button(onClick = {
-                        composableScope.launch {
-                            model?.generateMineMap(rows.value, columns.value, mines.value)
-                            visible.value = model?.onTheWayToFunnyMode() == true
-                            if (model != null) onNewGameCreated?.invoke(model)
+                        composeScope.launch {
+                            model.generateMineMap(rows.value, columns.value, mines.value)
+                            visible.value = model.onTheWayToFunnyMode() == true
+                            onNewGameCreated?.invoke(model)
                         }
                     }) {
                         Text(spec.strings.actionApply)
@@ -494,7 +453,7 @@ private fun ConfigPane(
                 if (enableGodMode) {
                     GodToggleButton(
                         onClick = {
-                            composeScope.launch { model?.funny?.emit(!model.funny.value) }
+                            composeScope.launch { model.funny.emit(!model.funny.value) }
                         },
                         checked = funny.value,
                     )
@@ -535,17 +494,10 @@ private fun TextedSlider(
             value = position.value,
             steps = (end - start - step) / step,
             valueRange = start.toFloat()..end.toFloat(),
-            onValueChange = { pos ->
-                // Log.d(TAG, "end value: $pos")
-                position.value = pos
-            },
-            onValueChangeFinished = {
-                onValueChanged?.invoke(position.value.toInt())
-            },
+            onValueChange = { pos -> position.value = pos },
+            onValueChangeFinished = { onValueChanged?.invoke(position.value.toInt()) },
             modifier = Modifier.weight(1f),
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colors.primaryVariant,
-            ),
+            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colors.primaryVariant),
         )
         Text(
             "$end",

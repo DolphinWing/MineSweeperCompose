@@ -43,51 +43,10 @@ fun AndroidMineUi(
         )
     ) {
         ContentViewWidget(
-            spec = spec,
-            row = model.rows.collectAsState().value,
-            column = model.columns.collectAsState().value,
-            mines = model.mines.collectAsState().value,
-            loading = model.loading.collectAsState().value,
             model = model,
+            spec = spec,
             onVibrate = onVibrate,
             onNewGameCreated = onNewGameCreated,
         )
-    }
-}
-
-@ExperimentalFoundationApi
-@Preview(name = "Default layout", showSystemUi = true)
-@Composable
-private fun PreviewMainUi() {
-    ContentViewWidget(
-        row = 6,
-        column = 5,
-        mines = 15,
-        showConfig = true,
-        loading = false,
-        spec = AndroidMineSpec(rows = 10, cols = 10, mines = 20),
-    )
-}
-
-@ExperimentalFoundationApi
-@Preview(name = "Mine block preview")
-@Composable
-private fun PreviewBlocks() {
-    val spec = AndroidMineSpec()
-    MaterialTheme {
-        Column {
-            Row {
-                BlockButton(BlockState.None, debug = true, spec = spec)
-                BlockButton(BlockState.None, debug = false, spec = spec)
-                BlockButton(BlockState.Marked, spec = spec)
-                BlockButton(BlockState.Mined, spec = spec)
-                BlockButton(BlockState.Hidden, spec = spec)
-                BlockButton(BlockState.Text, debug = true, spec = spec)
-                BlockButton(BlockState.Text, debug = false, spec = spec)
-            }
-            Row {
-                repeat(8) { TextBlock(value = it) }
-            }
-        }
     }
 }

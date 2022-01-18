@@ -12,14 +12,14 @@ import kotlin.random.Random
  * @param maxCols max columns
  * @param maxMines max mines
  */
-abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int = 10) {
+open class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int = 10) {
     companion object {
         private const val MINED = -99
     }
 
-    abstract fun log(message: String)
-    abstract fun startTicking()
-    abstract fun stopTicking()
+    open fun log(message: String) {}
+    open fun startTicking() {}
+    open fun stopTicking() {}
 
     /**
      * Current game state
