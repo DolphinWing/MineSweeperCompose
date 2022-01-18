@@ -1,6 +1,5 @@
 package dolphin.desktop.apps.minesweeper
 
-import dolphin.desktop.apps.common.BasicMineModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

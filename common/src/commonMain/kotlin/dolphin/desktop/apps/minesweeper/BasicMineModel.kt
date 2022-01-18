@@ -1,4 +1,4 @@
-package dolphin.desktop.apps.common
+package dolphin.desktop.apps.minesweeper
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -281,7 +281,7 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
         mineMap[oldIndex] = 0 // remove mine
         var newIndex = randomNewMine()
         while (newIndex == oldIndex) newIndex = randomNewMine()
-        log("move $oldIndex to $newIndex")
+        log("move mine @ $oldIndex to $newIndex")
         mineMap[newIndex] = MINED
     }
 
@@ -302,7 +302,7 @@ abstract class BasicMineModel(maxRows: Int = 6, maxCols: Int = 5, maxMines: Int 
      * @return game state after step on the block
      */
     private suspend fun stepOn(row: Int, column: Int): GameState {
-        log("step on ($row, $column)")
+        // log("step on ($row, $column)")
         if (gameState.value == GameState.Review) return GameState.Review
         val state = if (mineExists(row, column)) {
             if (firstClick) { // recalculate mine map because first click cannot be a mine

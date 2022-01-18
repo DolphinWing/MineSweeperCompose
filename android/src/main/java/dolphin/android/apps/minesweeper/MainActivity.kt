@@ -23,10 +23,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val (maxRow, maxColumn) = AndroidMineSpec.calculateScreenSize(resources.displayMetrics)
-        val spec = AndroidMineSpec(
-            maxRow, maxColumn, mines = 10, strings = AndroidConfigStrings(this)
-        )
+        val spec = AndroidMineSpec(resources.displayMetrics, context = this)
 
         setContent {
             AndroidMineUi(

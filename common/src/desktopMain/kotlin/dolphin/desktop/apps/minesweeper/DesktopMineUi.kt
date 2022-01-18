@@ -9,10 +9,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import dolphin.desktop.apps.common.BlockButton
-import dolphin.desktop.apps.common.BlockState
-import dolphin.desktop.apps.common.ContentViewWidget
-import dolphin.desktop.apps.common.TextBlock
 
 @Composable
 fun DesktopMineUi(debug: Boolean = false) {
@@ -21,7 +17,7 @@ fun DesktopMineUi(debug: Boolean = false) {
 
     LaunchedEffect(Unit) {
         model.generateMineMap()
-        model.funny.emit(debug)
+        // model.funny.emit(debug)
     }
 
     MaterialTheme {
@@ -32,6 +28,7 @@ fun DesktopMineUi(debug: Boolean = false) {
             column = model.columns.collectAsState().value,
             mines = model.mines.collectAsState().value,
             loading = model.loading.collectAsState().value,
+            debug = debug,
         )
     }
 }

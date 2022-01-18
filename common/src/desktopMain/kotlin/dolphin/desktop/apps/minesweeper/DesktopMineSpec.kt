@@ -3,38 +3,31 @@ package dolphin.desktop.apps.minesweeper
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import dolphin.desktop.apps.common.MineSpec
 
 class DesktopMineSpec : MineSpec(
     maxRows = 8,
     maxColumns = 15,
     maxMines = 40,
-    face = DesktopFacePainter(),
-    block = DesktopBlockPainter(),
+    facePainter = DesktopFacePainter(),
+    blockPainter = DesktopBlockPainter(),
 ) {
 }
 
-private class DesktopFacePainter : MineSpec.FacePainter {
+private class DesktopFacePainter(
+    happy: String = "face_smile.png",
+    joy: String = "face_win.png",
+    sad: String = "face_cry.png",
+) : MineSpec.FacePainter(happy, joy, sad) {
     @Composable
-    override fun happy(): Painter = painterResource("face_smile.png")
-
-    @Composable
-    override fun sad(): Painter = painterResource("face_cry.png")
-
-    @Composable
-    override fun joy(): Painter = painterResource("face_win.png")
+    override fun painter(resource: Any): Painter = painterResource(resource as String)
 }
 
-private class DesktopBlockPainter : MineSpec.BlockPainter {
+private class DesktopBlockPainter(
+    plain: String = "box.png",
+    mined: String = "mine_noclick.png",
+    marked: String = "mine_marked.png",
+    dead: String = "mine_clicked.png",
+) : MineSpec.BlockPainter(plain, mined, marked, dead) {
     @Composable
-    override fun plain(): Painter = painterResource("box.png")
-
-    @Composable
-    override fun marked(): Painter = painterResource("mine_marked.png")
-
-    @Composable
-    override fun dead(): Painter = painterResource("mine_clicked.png")
-
-    @Composable
-    override fun mined(): Painter = painterResource("mine_noclick.png")
+    override fun painter(resource: Any): Painter = painterResource(resource as String)
 }

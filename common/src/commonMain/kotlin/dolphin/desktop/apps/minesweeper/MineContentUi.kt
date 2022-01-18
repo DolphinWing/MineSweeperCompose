@@ -1,6 +1,4 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
-package dolphin.desktop.apps.common
+package dolphin.desktop.apps.minesweeper
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -22,6 +20,7 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -66,6 +65,7 @@ fun ContentViewWidget(
     model: BasicMineModel? = null,
     onVibrate: (() -> Unit)? = null,
     onNewGameCreated: ((model: BasicMineModel) -> Unit)? = null,
+    debug: Boolean = false,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -94,6 +94,7 @@ fun ContentViewWidget(
             mine = mines,
             showConfig = showConfig,
             onNewGameCreated = onNewGameCreated,
+            enableGodMode = debug,
         )
 
         if (loading) {
@@ -123,9 +124,9 @@ private fun BlockImageDrawable(
 
 @Composable
 private fun HeaderWidget(
-    model: BasicMineModel?,
+    spec: MineSpec = MineSpec(),
+    model: BasicMineModel? = null,
     onNewGameCreated: ((model: BasicMineModel) -> Unit)? = null,
-    spec: MineSpec,
 ) {
     val composableScope = rememberCoroutineScope()
 
@@ -134,7 +135,7 @@ private fun HeaderWidget(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        MineCountWidget(model = model, Modifier.weight(1f))
+        MineCountWidget(model = model, modifier = Modifier.weight(1f))
 
         model?.let { mineModel ->
             Box(
@@ -146,10 +147,8 @@ private fun HeaderWidget(
                 }),
             ) {
                 SmileyIcon(
-                    mineModel.gameState.collectAsState().value,
-                    cryDrawable = spec.face.sad(),
-                    winDrawable = spec.face.joy(),
-                    normalDrawable = spec.face.happy(),
+                    state = mineModel.gameState.collectAsState().value,
+                    facePainter = spec.facePainter,
                 )
             }
         } ?: kotlin.run { Icon(Icons.Default.Refresh, contentDescription = null) }
@@ -159,14 +158,10 @@ private fun HeaderWidget(
 }
 
 @Composable
-private fun MineCountWidget(model: BasicMineModel?, modifier: Modifier = Modifier) {
+private fun MineCountWidget(modifier: Modifier = Modifier, model: BasicMineModel? = null) {
     Text(
         model?.remainingMines?.collectAsState()?.value?.toString()?.padStart(5, '0') ?: "00000",
-        style = TextStyle(
-            color = Color.Red,
-            fontSize = 24.sp,
-            fontFamily = FontFamily.Monospace,
-        ),
+        style = TextStyle(color = Color.Red, fontSize = 24.sp, fontFamily = FontFamily.Monospace),
         modifier = modifier,
         textAlign = TextAlign.Center,
     )
@@ -175,14 +170,12 @@ private fun MineCountWidget(model: BasicMineModel?, modifier: Modifier = Modifie
 @Composable
 private fun SmileyIcon(
     state: GameState,
-    cryDrawable: Painter,
-    winDrawable: Painter,
-    normalDrawable: Painter,
+    facePainter: MineSpec.FacePainter = MineSpec.DefaultFacePainter(),
 ) {
     val image = when (state) {
-        GameState.Exploded, GameState.Review -> cryDrawable
-        GameState.Cleared -> winDrawable
-        else -> normalDrawable
+        GameState.Exploded, GameState.Review -> facePainter.sad()
+        GameState.Cleared -> facePainter.joy()
+        else -> facePainter.happy()
     }
     BlockImageDrawable(image, MineSpec.SMILEY_SIZE.dp, MineSpec.SMILEY_SIZE.dp)
 }
@@ -191,11 +184,7 @@ private fun SmileyIcon(
 private fun PlayClockWidget(model: BasicMineModel?, modifier: Modifier = Modifier) {
     Text(
         model?.clock?.collectAsState()?.value?.toString()?.padStart(5, '0') ?: "00000",
-        style = TextStyle(
-            color = Color.Red,
-            fontSize = 24.sp,
-            fontFamily = FontFamily.Monospace,
-        ),
+        style = TextStyle(color = Color.Red, fontSize = 24.sp, fontFamily = FontFamily.Monospace),
         modifier = modifier,
         textAlign = TextAlign.Center,
     )
@@ -257,7 +246,7 @@ private fun BlockButtonImpl(
 }
 
 /**
- * A block button in the mine field.
+ * A block button in the minefield.
  */
 @Composable
 fun BlockButton(
@@ -271,11 +260,11 @@ fun BlockButton(
 ) {
     when (blockState) {
         BlockState.Marked ->
-            MarkedBlock(model, row, column, onVibrate = onVibrate, spec = spec)
+            MarkedBlock(model, row, column, onVibrate = onVibrate, blockPainter = spec.blockPainter)
         BlockState.Mined, BlockState.Hidden ->
-            MineBlock(clicked = blockState == BlockState.Mined, spec = spec)
+            MineBlock(clicked = blockState == BlockState.Mined, blockPainter = spec.blockPainter)
         BlockState.Text ->
-            TextBlock(model, row, column, debug = debug ?: false)
+            TextBlock(model, row, column, debug = debug ?: false, spec = spec)
         else ->
             BaseBlock(
                 model = model,
@@ -283,11 +272,12 @@ fun BlockButton(
                 column = column,
                 debug = debug ?: model?.funny?.collectAsState()?.value ?: false,
                 onVibrate = onVibrate,
-                spec = spec,
+                blockPainter = spec.blockPainter,
             )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BaseBlock(
     model: BasicMineModel? = null,
@@ -295,7 +285,7 @@ private fun BaseBlock(
     column: Int,
     debug: Boolean = false,
     onVibrate: (() -> Unit)? = null,
-    spec: MineSpec = MineSpec(),
+    blockPainter: MineSpec.BlockPainter = MineSpec.DefaultBlockPainter(),
 ) {
     val composableScope = rememberCoroutineScope()
 
@@ -317,19 +307,20 @@ private fun BaseBlock(
             ),
     ) {
         Box {
-            BlockImageDrawable(image = spec.block.plain())
+            BlockImageDrawable(image = blockPainter.plain())
             if (debug) Box { TextBlock(model, row, column, debug = debug) }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MarkedBlock(
     model: BasicMineModel? = null,
     row: Int,
     column: Int,
     onVibrate: (() -> Unit)? = null,
-    spec: MineSpec = MineSpec(),
+    blockPainter: MineSpec.BlockPainter = MineSpec.DefaultBlockPainter(),
 ) {
     val composableScope = rememberCoroutineScope()
 
@@ -337,7 +328,7 @@ private fun MarkedBlock(
         modifier = Modifier
             .size(MineSpec.BLOCK_SIZE.dp)
             .combinedClickable(
-                onClick = { },
+                onClick = { /* only support long click here */ },
                 onLongClick = {
                     composableScope.launch {
                         model?.unmarkMine(row, column)
@@ -346,13 +337,16 @@ private fun MarkedBlock(
                 }
             ),
     ) {
-        BlockImageDrawable(image = spec.block.marked())
+        BlockImageDrawable(image = blockPainter.marked())
     }
 }
 
 @Composable
-private fun MineBlock(clicked: Boolean = false, spec: MineSpec = MineSpec()) {
-    val drawable = if (clicked) spec.block.dead() else spec.block.mined()
+private fun MineBlock(
+    clicked: Boolean = false,
+    blockPainter: MineSpec.BlockPainter = MineSpec.DefaultBlockPainter(),
+) {
+    val drawable = if (clicked) blockPainter.dead() else blockPainter.mined()
     Box(
         modifier = Modifier
             .size(MineSpec.BLOCK_SIZE.dp)
@@ -423,8 +417,9 @@ private fun ConfigPane(
     val columns = remember { mutableStateOf(column) }
     val mines = remember { mutableStateOf(mine) }
     val composableScope = rememberCoroutineScope()
+    val funny = model?.funny?.collectAsState() ?: remember { mutableStateOf(false) }
 
-    val buttonText = if (visible.value) spec.strings.hide() else spec.strings.show()
+    val buttonText = if (visible.value) spec.strings.actionHide else spec.strings.actionShow
 
     fun restoreConfig() {
         // reset values to current config
@@ -448,21 +443,21 @@ private fun ConfigPane(
         ) {
             if (visible.value) {
                 TextedSlider(
-                    title = spec.strings.rows(),
+                    title = spec.strings.configRows,
                     initial = row,
                     start = 5,
                     end = spec.maxRows,
                     onValueChanged = { rows.value = it },
                 )
                 TextedSlider(
-                    title = spec.strings.columns(),
+                    title = spec.strings.configColumns,
                     initial = column,
                     start = 4,
                     end = spec.maxColumns,
                     onValueChanged = { columns.value = it },
                 )
                 TextedSlider(
-                    title = spec.strings.mines(),
+                    title = spec.strings.configMines,
                     initial = mine,
                     start = 5,
                     end = spec.maxMines,
@@ -493,13 +488,16 @@ private fun ConfigPane(
                             if (model != null) onNewGameCreated?.invoke(model)
                         }
                     }) {
-                        Text(spec.strings.apply())
+                        Text(spec.strings.actionApply)
                     }
                 }
                 if (enableGodMode) {
-                    TextButton(onClick = { composeScope.launch { model?.funny?.emit(true) } }) {
-                        Text("GOD")
-                    }
+                    GodToggleButton(
+                        onClick = {
+                            composeScope.launch { model?.funny?.emit(!model.funny.value) }
+                        },
+                        checked = funny.value,
+                    )
                 }
             }
         }
@@ -555,5 +553,18 @@ private fun TextedSlider(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.body2,
         )
+    }
+}
+
+@Composable
+private fun GodToggleButton(onClick: () -> Unit, checked: Boolean = false) {
+    TextButton(
+        onClick = onClick,
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = if (checked) MaterialTheme.colors.onSecondary else MaterialTheme.colors.primary,
+            backgroundColor = if (checked) MaterialTheme.colors.secondary else Color.Transparent
+        )
+    ) {
+        Text("GOD")
     }
 }

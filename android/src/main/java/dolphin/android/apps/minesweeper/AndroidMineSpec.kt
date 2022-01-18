@@ -3,10 +3,11 @@ package dolphin.android.apps.minesweeper
 import android.content.Context
 import android.util.DisplayMetrics
 import android.util.Log
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import dolphin.desktop.apps.common.MineSpec
+import dolphin.desktop.apps.minesweeper.MineSpec
 
 /**
  * Android [MineSpec] implementation.
@@ -20,10 +21,10 @@ class AndroidMineSpec(
     rows: Int = 6,
     cols: Int = 5,
     mines: Int = 40,
-    strings: ConfigStrings = ConfigStrings(),
+    strings: DefaultString = DefaultString(),
 ) : MineSpec(
     maxRows = rows, maxColumns = cols, maxMines = mines,
-    face = AndroidFacePainter(), block = AndroidBlockPainter(), strings = strings,
+    facePainter = AndroidFacePainter(), blockPainter = AndroidBlockPainter(), strings = strings,
 ) {
     companion object {
         private const val TAG = "AndroidMineSpec"
@@ -33,7 +34,7 @@ class AndroidMineSpec(
          *
          * @return a pair of maximum (row, column)
          */
-        fun calculateScreenSize(displayMetrics: DisplayMetrics): Pair<Int, Int> {
+        private fun calculateScreenSize(displayMetrics: DisplayMetrics): Pair<Int, Int> {
             val height: Float = displayMetrics.heightPixels / displayMetrics.density
             val width: Float = displayMetrics.widthPixels / displayMetrics.density
             val r = kotlin.math.floor((height - 160) / BLOCK_SIZE).toInt()
@@ -42,38 +43,41 @@ class AndroidMineSpec(
             return Pair(r, c)
         }
     }
+
+    private constructor(size: Pair<Int, Int>, strings: DefaultString) :
+            this(rows = size.first, cols = size.second, strings = strings)
+
+    /**
+     * Make a [MineSpec] for Android platform
+     */
+    constructor(displayMetrics: DisplayMetrics, context: Context) :
+            this(calculateScreenSize(displayMetrics), AndroidDefaultString(context))
 }
 
-private class AndroidFacePainter : MineSpec.FacePainter {
+private class AndroidFacePainter(
+    @DrawableRes happy: Int = R.drawable.face_smile,
+    @DrawableRes joy: Int = R.drawable.face_win,
+    @DrawableRes sad: Int = R.drawable.face_cry,
+) : MineSpec.FacePainter(happy, joy, sad) {
     @Composable
-    override fun sad(): Painter = painterResource(R.drawable.face_cry)
-
-    @Composable
-    override fun joy(): Painter = painterResource(R.drawable.face_win)
-
-    @Composable
-    override fun happy(): Painter = painterResource(R.drawable.face_smile)
+    override fun painter(resource: Any): Painter = painterResource(resource as Int)
 }
 
-private class AndroidBlockPainter : MineSpec.BlockPainter {
+private class AndroidBlockPainter(
+    @DrawableRes plain: Int = R.drawable.box,
+    @DrawableRes mined: Int = R.drawable.mine_noclick,
+    @DrawableRes marked: Int = R.drawable.mine_marked,
+    @DrawableRes dead: Int = R.drawable.mine_clicked,
+) : MineSpec.BlockPainter(plain, mined, marked, dead) {
     @Composable
-    override fun plain(): Painter = painterResource(R.drawable.box)
-
-    @Composable
-    override fun mined(): Painter = painterResource(R.drawable.mine_noclick)
-
-    @Composable
-    override fun marked(): Painter = painterResource(R.drawable.mine_marked)
-
-    @Composable
-    override fun dead(): Painter = painterResource(R.drawable.mine_clicked)
+    override fun painter(resource: Any): Painter = painterResource(resource as Int)
 }
 
-class AndroidConfigStrings(private val context: Context) : MineSpec.ConfigStrings() {
-    override fun hide(): String = context.getString(R.string.action_hide)
-    override fun show(): String = context.getString(R.string.action_config)
-    override fun apply(): String = context.getString(R.string.action_apply)
-    override fun rows(): String = context.getString(R.string.config_row)
-    override fun columns(): String = context.getString(R.string.config_column)
-    override fun mines(): String = context.getString(R.string.config_mine)
-}
+private class AndroidDefaultString(context: Context) : MineSpec.DefaultString(
+    actionApply = context.getString(R.string.action_apply),
+    actionShow = context.getString(R.string.action_config),
+    actionHide = context.getString(R.string.action_hide),
+    configRows = context.getString(R.string.config_row),
+    configColumns = context.getString(R.string.config_column),
+    configMines = context.getString(R.string.config_mine),
+)

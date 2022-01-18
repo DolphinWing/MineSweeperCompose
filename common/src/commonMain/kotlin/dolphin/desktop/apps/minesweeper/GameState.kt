@@ -1,4 +1,4 @@
-package dolphin.desktop.apps.common
+package dolphin.desktop.apps.minesweeper
 
 /**
  * Game state

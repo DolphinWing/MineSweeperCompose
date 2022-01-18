@@ -4,7 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.util.Log
-import dolphin.desktop.apps.common.BasicMineModel
+import dolphin.desktop.apps.minesweeper.BasicMineModel
 
 /**
  * data model for app

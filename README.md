@@ -1,13 +1,15 @@
-# Mine Sweeper (Android)
+# Mine Sweeper (Compose Multiplatform)
 
-You can download it from [Google Play](https://play.google.com/store/apps/details?id=dolphin.android.apps.minesweeper)
+You can download Android version from [Google Play](https://play.google.com/store/apps/details?id=dolphin.android.apps.minesweeper)
 or Join [Beta Test Channel](https://play.google.com/apps/testing/dolphin.android.apps.minesweeper)
 
-Built with Jetpack Compose version: 1.0.5
+You can download Desktop version from [Releases](https://github.com/DolphinWing/MineSweeperAndroid/releases) section. Currently only Windows and Linux are available.
 
-**Android Studio Arctic Fox or above required** (for Jetpack Compose)
+Built with [Compose Multiplatform](https://www.jetbrains.com/lp/compose-mpp/) version: 1.0.0
 
-![Android CI](https://github.com/DolphinWing/MineSweeperAndroid/workflows/Android%20CI/badge.svg)
+**IntelliJ IDEA 2021.3 (Community Edition)** or above required
+
+![Desktop CI](https://github.com/DolphinWing/MineSweeperAndroid/workflows/Desktop%20CI/badge.svg)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

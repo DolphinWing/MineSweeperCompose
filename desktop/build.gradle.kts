@@ -31,8 +31,8 @@ compose.desktop {
     application {
         mainClass = "dolphin.desktop.apps.minesweeper.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "jvm"
+            targetFormats(TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "MineSweeper"
             packageVersion = "1.0.0"
         }
     }
