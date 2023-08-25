@@ -11,7 +11,11 @@ fun main() = application {
     val debug = File(workingDir, "build").exists() // has build dir
     println("debug = $debug")
 
-    Window(onCloseRequest = ::exitApplication, resizable = false) {
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = "MineSweeper by Compose",
+        resizable = false,
+    ) {
         DesktopMineUi(debug = debug)
     }
 }

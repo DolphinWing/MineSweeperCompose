@@ -2,7 +2,7 @@ import org.jetbrains.compose.compose
 
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.compose") version "1.0.0"
+    id("org.jetbrains.compose")
     id("com.android.library")
 }
 
@@ -12,9 +12,7 @@ version = "1.0"
 kotlin {
     android()
     jvm("desktop") {
-        compilations.all {
-            kotlinOptions.jvmTarget = "11"
-        }
+        jvmToolchain(11)
     }
     sourceSets {
         val commonMain by getting {
@@ -31,8 +29,8 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                api("androidx.appcompat:appcompat:1.4.1")
-                api("androidx.core:core-ktx:1.7.0")
+                api("androidx.appcompat:appcompat:1.5.1")
+                api("androidx.core:core-ktx:1.9.0")
             }
         }
         val androidTest by getting {
@@ -43,7 +41,6 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 api(compose.preview)
-                implementation(compose.uiTooling)
             }
         }
         val desktopTest by getting
@@ -51,11 +48,11 @@ kotlin {
 }
 
 android {
-    compileSdk = 31
+    compileSdkVersion(33)
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
-        minSdk = 23
-        targetSdk = 31
+        minSdkVersion(24)
+        targetSdkVersion(33)
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
