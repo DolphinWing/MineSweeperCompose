@@ -13,16 +13,16 @@ repositories {
 }
 
 val composeVersion = org.jetbrains.compose.ComposeBuildConfig.composeVersion
-val lifecycleVersion = "2.4.0"
+val lifecycleVersion = "2.8.3"
 
 dependencies {
     implementation(project(":common"))
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.activity:activity-ktx:1.7.2")
-    implementation("androidx.activity:activity-compose:1.7.2")
-    implementation("androidx.core:core-ktx:1.10.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     implementation("androidx.compose.runtime:runtime:$composeVersion")
     implementation("androidx.compose.runtime:runtime-livedata:$composeVersion")
@@ -40,17 +40,18 @@ dependencies {
 }
 
 android {
-    compileSdk = 34
+    namespace = "dolphin.android.apps.minesweeper"
+    compileSdk = 35
     defaultConfig {
         applicationId = "dolphin.android.apps.minesweeper"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 23
-        versionName = "1.4.1"
+        versionName = "1.4.2"
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildTypes {
         getByName("release") {

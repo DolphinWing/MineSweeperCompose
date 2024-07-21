@@ -50,8 +50,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun whenVibrate() {
         when {
-            BuildCompat.isAtLeastS() -> vibrateAtLeastS()
-            BuildCompat.isAtLeastO() -> vibrateAtLeastO()
+            Build.VERSION.SDK_INT >= 31 -> vibrateAtLeastS()
+            Build.VERSION.SDK_INT >= 26 -> vibrateAtLeastO()
             else -> vibrateLegacy()
         }
     }
@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun vibrateAtLeastO() {
         val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
-        val effect = if (BuildCompat.isAtLeastQ()) {
+        val effect = if (Build.VERSION.SDK_INT >= 29) {
             VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
         } else {
             VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE)
