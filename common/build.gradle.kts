@@ -12,7 +12,7 @@ version = "1.0"
 kotlin {
     android()
     jvm("desktop") {
-        jvmToolchain(11)
+        jvmToolchain(17)
     }
     sourceSets {
         val commonMain by getting {
@@ -29,7 +29,7 @@ kotlin {
         }
         val androidMain by getting {
             dependencies {
-                api("androidx.appcompat:appcompat:1.7.0")
+                api("androidx.appcompat:appcompat:1.7.1")
                 api("androidx.core:core-ktx:1.13.1")
             }
         }
@@ -49,11 +49,11 @@ kotlin {
 
 android {
     namespace = "dolphin.apps.desktop.common"
-    compileSdk = 35
+    compileSdk = 36
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

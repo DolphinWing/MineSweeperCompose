@@ -41,13 +41,16 @@ dependencies {
 
 android {
     namespace = "dolphin.android.apps.minesweeper"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "dolphin.android.apps.minesweeper"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 23
-        versionName = "1.4.2"
+        targetSdk = 36
+        versionCode = 25
+        versionName = "1.4.3"
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
